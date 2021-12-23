@@ -5,10 +5,12 @@ pkgs.mkShell {
         pkgs.cmake
     ];
     buildInputs = [
-        #pkgs.gtest
-        #pkgs.nlohmann_json
         pkgs.git
         pkgs.gdb
         pkgs.valgrind
+        pkgs.which
+        pkgs.python39Packages.gprof2dot
+        pkgs.xdot
+        pkgs.graphviz
     ];
 }

@@ -55,8 +55,9 @@ TEST_F(EngineTestFixture, construct_correct_board_from_invalid_fens_should_fail)
 }
 
 TEST_F(EngineTestFixture, construct_correct_board_from_starting_position_fen) {
-    ASSERT_TRUE(Board::fromFen(starting_position_fen).has_value());
-    Board board = Board::fromFen(starting_position_fen).value();
+    auto optionalBoard = Board::fromFen(starting_position_fen);
+    ASSERT_TRUE(optionalBoard.has_value());
+    Board board = optionalBoard.value();
 
     for (int c = 0; c < 8; c++) {
         for (int r = 2; r < 6; r++) {

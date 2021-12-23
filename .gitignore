@@ -77,3 +77,8 @@ _deps
 _build/
 _install/
 .vscode
+valgrind-out.txt
+callgrind.out.*
+gmon.out
+*.svg
+*.out

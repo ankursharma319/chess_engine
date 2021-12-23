@@ -1,9 +1,9 @@
+include(FetchContent)
 
 if(CHESS_ENGINE_USE_EXTERNAL_JSON)
     find_package(nlohmann_json 3.2.0 REQUIRED)
 else()
     set(JSON_BuildTests OFF CACHE INTERNAL "")
-    include(FetchContent)
     FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
         GIT_TAG v3.10.4)
@@ -15,7 +15,7 @@ else()
     endif()
 endif()
 
-include(FetchContent)
+set(INSTALL_GTEST OFF CACHE BOOL "Install GTest - no need since embedded project")
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
