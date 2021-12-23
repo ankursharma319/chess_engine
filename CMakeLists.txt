@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # set the project name
 project(ChessEngine)
+option(CHESS_ENGINE_USE_EXTERNAL_JSON "Use external Nlohmann JSON library" OFF)
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -14,6 +15,7 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
+add_subdirectory(thirdparty)
 add_subdirectory(src-lib)
 add_subdirectory(src-exe)
 add_subdirectory(tests)

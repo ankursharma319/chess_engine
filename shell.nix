@@ -5,8 +5,9 @@ pkgs.mkShell {
         pkgs.cmake
     ];
     buildInputs = [
-        pkgs.gtest
-        pkgs.nlohmann_json
+        #pkgs.gtest
+        #pkgs.nlohmann_json
+        pkgs.git
         pkgs.gdb
         pkgs.valgrind
     ];

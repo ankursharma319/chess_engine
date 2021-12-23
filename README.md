@@ -7,3 +7,10 @@ cmake --build _build/
 make -C _build/
 _build/ChessEngine
 ```
+
+OR
+
+```
+./configure.sh
+./build.sh
+```

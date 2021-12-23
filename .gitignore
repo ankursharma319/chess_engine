@@ -76,3 +76,4 @@ _deps
 
 _build/
 _install/
+.vscode

@@ -1,3 +1,3 @@
 #! /bin/sh
 
-cmake -S ./ -B ./_build/
+cmake --log-level=VERBOSE -S ./ -B ./_build/
