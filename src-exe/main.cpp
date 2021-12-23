@@ -1,8 +1,7 @@
 #include <iostream>
-#include "ChessEngineLib/ChessBoard.hpp"
+#include "ChessEngineLib/Engine.hpp"
 
 int main() {
     std::cout << "Hello World!" << std::endl;
-    std::cout << prettyJson("{\"From\":\"Me\"}") << std::endl;
     return 0;
 }

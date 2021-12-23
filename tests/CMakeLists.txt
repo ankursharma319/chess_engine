@@ -1,6 +1,6 @@
 enable_testing()
 
-add_executable(ChessEngineTests ChessBoardTests.cpp)
+add_executable(ChessEngineTests ChessEngineTests.cpp)
 
 target_link_libraries(ChessEngineTests gtest_main)
 target_link_libraries(ChessEngineTests ChessEngineLib)
