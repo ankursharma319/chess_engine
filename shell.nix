@@ -12,5 +12,6 @@ pkgs.mkShell {
         pkgs.python39Packages.gprof2dot
         pkgs.xdot
         pkgs.graphviz
+        pkgs.clang_13
     ];
 }
