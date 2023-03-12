@@ -12,8 +12,8 @@ enum Color {
 };
 
 struct Square {
-    int col;
-    int row;
+    std::uint8_t col;
+    std::uint8_t row;
 };
 
 struct Piece {

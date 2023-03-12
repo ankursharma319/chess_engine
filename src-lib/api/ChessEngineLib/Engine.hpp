@@ -7,9 +7,9 @@
 
 namespace ChessEngineLib {
 
-bool validateFen(std::string fen);
-bool isMoveLegal(std::string fen, std::string move);
-std::size_t getNumberOfLegalMoves(std::string fen);
+bool validateFen(std::string const& fen);
+bool isMoveLegal(std::string const& fen, std::string const& move);
+std::size_t getNumberOfLegalMoves(std::string const& fen);
 
 }
 
