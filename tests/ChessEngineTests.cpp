@@ -24,7 +24,7 @@ protected:
     const Piece white_rook = Piece(Piece::Type::Rook, Color::White);
     const Piece white_queen = Piece(Piece::Type::Queen, Color::White);
     const Piece white_king = Piece(Piece::Type::King, Color::White);
-    
+
     const std::string starting_position_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 };
 

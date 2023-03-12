@@ -1,10 +1,10 @@
-{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/7ac6901f5e3038d59d3e2576af445fe418291dd8.tar.gz") {}}:
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/2ce9b9842b5e63884dfc3dea6689769e2a1ea309.tar.gz") {}}:
 
 pkgs.mkShell {
     nativeBuildInputs = [
         pkgs.cmake
     ];
-    buildInputs = [
+    buildInputs = if pkgs.stdenv.isDarwin then [] else [ pkgs.valgrind ] ++ [
         pkgs.git
         pkgs.gdb
         pkgs.valgrind
