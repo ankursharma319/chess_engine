@@ -1,8 +1,11 @@
-#include <cstdint>
-#include <nlohmann/json.hpp>
-#include <optional>
 #include "Board.hpp"
 #include "Move.hpp"
+
+#include <nlohmann/json.hpp>
+#include <glog/logging.h>
+
+#include <cstdint>
+#include <optional>
 
 namespace {
 
@@ -93,31 +96,35 @@ std::optional<ChessEngineLib::Piece> parse_piece(char c) {
 std::optional<ChessEngineLib::Board::Board2dArray> parse_pieces(std::string const& fen_chunk) {
     const std::vector<std::string> ranks = split_string(fen_chunk, "/");
     if (ranks.size() != 8) {
+        VLOG(3) << "didnt find 8 ranks";
         return std::nullopt;
     }
     std::array<std::array<std::optional<ChessEngineLib::Piece>, 8>, 8> grid {};
     for (std::size_t rank=0; rank < 8; rank++) {
         std::string pieces = ranks.at(rank);
         if (pieces.empty() || pieces.size() > 8) {
+            VLOG(3) << "bad rank string = " << pieces;
             return std::nullopt;
         }
         std::uint8_t file = 0;
         for (char c : pieces) {
             if (file > 8) {
+                VLOG(3) << "bad file = " << file;
                 return std::nullopt;
             }
             if (c >= '1' && c <= '8') {
                 file += (c - '0');
             } else if (auto piece = parse_piece(c); piece.has_value()) {
                 assert(file < 8);
-                grid[file][rank] = piece.value();
+                grid[file][7-rank] = piece.value();
                 file ++;
             } else {
+                VLOG(3) << "bad character in rank = " << c;
                 return std::nullopt;
             }
         }
     }
-    return std::nullopt;
+    return grid;
 }
 
 }
@@ -125,26 +132,31 @@ std::optional<ChessEngineLib::Board::Board2dArray> parse_pieces(std::string cons
 namespace ChessEngineLib {
 
 std::optional<Board> Board::fromFen(std::string const& fen) {
+    VLOG(2) << "fen = " << fen;
     std::vector<std::string> chunks = split_string(fen, " ");
     if (chunks.size() != 6) {
+        VLOG(2) << "fen invalid because chunks.size()=" << chunks.size();
         return std::nullopt;
     }
 
     // parse piece grid
     std::optional<Board2dArray> grid = parse_pieces(chunks.at(0));
     if (!grid.has_value()) {
+        VLOG(2) << "fen invalid because of grid contents";
         return std::nullopt;
     }
 
     // parse next move color
     std::optional<Color> next_move_color = to_color(chunks.at(1));
     if (!next_move_color.has_value()) {
+        VLOG(2) << "fen invalid because of next_move_color";
         return std::nullopt;
     }
 
     // parse castling availability
     std::optional<CastlingAvailability> castling_availability = parse_castling_availability(chunks.at(2));
     if (!castling_availability.has_value()) {
+        VLOG(2) << "fen invalid because of castling_availability";
         return std::nullopt;
     }
 
@@ -153,6 +165,7 @@ std::optional<Board> Board::fromFen(std::string const& fen) {
     if (chunks.at(3) != "-") {
         en_passant_square = get_square(chunks.at(3));
         if (!en_passant_square.has_value()) {
+            VLOG(2) << "fen invalid because of en_passant_square";
             return std::nullopt;
         }
     }
@@ -161,9 +174,7 @@ std::optional<Board> Board::fromFen(std::string const& fen) {
     std::optional<std::size_t> half_move_clock = to_num(chunks.at(4));
     std::optional<std::size_t> full_move_number = to_num(chunks.at(5));
     if (!half_move_clock.has_value() || !full_move_number.has_value()) {
-        return std::nullopt;
-    }
-    if (half_move_clock > full_move_number) {
+        VLOG(2) << "fen invalid because of move number";
         return std::nullopt;
     }
 
@@ -182,25 +193,31 @@ std::array<std::array<std::optional<Piece>, 8>, 8> Board::getContents() const {
 }
 
 Color Board::getNextMoveColor() const {
-    return Color::Black;
+    return m_nextMoveColor;
 }
 
-bool Board::isCastlingExpired(Color color, Side side) const {
-    (void) color;
-    (void) side;
-    return false;
+bool Board::isCastlingAvailable(Color color, Side side) const {
+    if (color == Color::Black && side == Side::KingSide) {
+        return m_castlingAvailability.blackKingSide;
+    } else if (color == Color::Black && side == Side::QueenSide) {
+        return m_castlingAvailability.blackQueenSide;
+    } else if (color == Color::White && side == Side::QueenSide) {
+        return m_castlingAvailability.whiteQueenSide;
+    } else {
+        return m_castlingAvailability.whiteKingSide;
+    }
 }
 
 std::size_t Board::getHalfMoveClock() const {
-    return 0;
+    return m_halfMoveClock;
 }
 
 std::size_t Board::getMoveNumber() const {
-    return 0;
+    return m_moveNumber;
 }
 
 std::optional<Square> Board::getEnPassantSquare() {
-    return std::nullopt;
+    return m_enPassantSquare;
 }
 
 std::optional<Board::CastlingAvailability> Board::parse_castling_availability(std::string const& fen_chunk) {

@@ -109,13 +109,13 @@ TEST_F(EngineTestFixture, construct_correct_board_from_starting_position_fen) {
     EXPECT_EQ(white_king, board.getContents()[4][0].value());
 
     EXPECT_EQ(Color::White, board.getNextMoveColor());
-    EXPECT_FALSE(board.isCastlingExpired(Color::White, Side::KingSide));
-    EXPECT_FALSE(board.isCastlingExpired(Color::White, Side::QueenSide));
-    EXPECT_FALSE(board.isCastlingExpired(Color::Black, Side::KingSide));
-    EXPECT_FALSE(board.isCastlingExpired(Color::Black, Side::QueenSide));
+    EXPECT_TRUE(board.isCastlingAvailable(Color::White, Side::KingSide));
+    EXPECT_TRUE(board.isCastlingAvailable(Color::White, Side::QueenSide));
+    EXPECT_TRUE(board.isCastlingAvailable(Color::Black, Side::KingSide));
+    EXPECT_TRUE(board.isCastlingAvailable(Color::Black, Side::QueenSide));
 
     EXPECT_EQ(0, board.getHalfMoveClock());
-    EXPECT_EQ(0, board.getMoveNumber());
+    EXPECT_EQ(1, board.getMoveNumber());
     EXPECT_FALSE(board.getEnPassantSquare().has_value());
 }
 
@@ -124,7 +124,19 @@ TEST_F(EngineTestFixture, construct_correct_board_from_another_random_fen) {
     ASSERT_TRUE(Board::fromFen(fen).has_value());
     Board board = Board::fromFen(fen).value();
 
+    ASSERT_TRUE(board.getContents()[3][5].has_value());
+    ASSERT_TRUE(board.getContents()[4][4].has_value());
+    ASSERT_TRUE(board.getContents()[5][2].has_value());
+    EXPECT_EQ(black_pawn, board.getContents()[3][5].value());
+    EXPECT_EQ(black_pawn, board.getContents()[4][4].value());
+    EXPECT_EQ(white_knight, board.getContents()[5][2].value());
+
     ASSERT_TRUE(board.getContents()[6][3].has_value());
     EXPECT_EQ(black_bishop, board.getContents()[6][3].value());
     EXPECT_FALSE(board.getContents()[7][4].has_value());
+
+    EXPECT_EQ(Color::Black, board.getNextMoveColor());
+    EXPECT_EQ(3, board.getHalfMoveClock());
+    EXPECT_EQ(4, board.getMoveNumber());
+    EXPECT_FALSE(board.getEnPassantSquare().has_value());
 }

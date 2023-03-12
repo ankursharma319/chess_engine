@@ -4,6 +4,7 @@
 #include <string>
 #include <array>
 #include <optional>
+#include <ostream>
 
 namespace ChessEngineLib {
 
@@ -31,6 +32,47 @@ struct Piece {
         return (type == other.type) && (color == other.color);
     }
 };
+
+inline std::ostream & operator<<(std::ostream &os, Color c) {
+    switch (c) {
+        case Color::Black:
+            os << "Black";
+            break;
+        case Color::White:
+            os << "White";
+            break;
+    }
+    return os;
+}
+
+inline std::ostream & operator<<(std::ostream &os, Piece::Type t) {
+    switch (t) {
+        case Piece::Type::King:
+            os << "King";
+            break;
+        case Piece::Type::Queen:
+            os << "Queen";
+            break;
+        case Piece::Type::Rook:
+            os << "Rook";
+            break;
+        case Piece::Type::Bishop:
+            os << "Bishop";
+            break;
+        case Piece::Type::Knight:
+            os << "Knight";
+            break;
+        case Piece::Type::Pawn:
+            os << "Pawn";
+            break;
+    }
+    return os;
+}
+
+inline std::ostream & operator<<(std::ostream &os, Piece const& p) {
+    os << p.color << " " << p.type;
+    return os;
+}
 
 struct Move {
     Piece piece;

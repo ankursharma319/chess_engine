@@ -21,7 +21,7 @@ public:
     using Board2dArray = std::array<std::array<std::optional<Piece>, 8>, 8>;
     Board2dArray getContents() const;
     Color getNextMoveColor() const;
-    bool isCastlingExpired(Color color, Side side) const;
+    bool isCastlingAvailable(Color color, Side side) const;
     std::size_t getHalfMoveClock() const; //For fifty move rule
     std::size_t getMoveNumber() const; // Starts at 1
     std::optional<Square> getEnPassantSquare(); // Just behind the pawn that moved 2 squares
