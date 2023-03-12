@@ -25,6 +25,17 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+# workaround for CMP0042 warning on Mac
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  if(NOT DEFINED CMAKE_MACOSX_RPATH)
+    set(CMAKE_MACOSX_RPATH ON)
+  endif()
+endif()
+
+if (POLICY CMP0042) # MACOSX_RPTH
+    cmake_policy(SET CMP0042 NEW)
+endif (POLICY CMP0042)
+
 add_subdirectory(thirdparty)
 add_subdirectory(src-lib)
 add_subdirectory(src-exe)

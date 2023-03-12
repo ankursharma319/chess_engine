@@ -2,8 +2,7 @@ enable_testing()
 
 add_executable(ChessEngineTests ChessEngineTests.cpp)
 
-target_link_libraries(ChessEngineTests gtest_main)
-target_link_libraries(ChessEngineTests ChessEngineLib)
+target_link_libraries(ChessEngineTests gtest glog::glog ChessEngineLib)
 
 include(GoogleTest)
 
