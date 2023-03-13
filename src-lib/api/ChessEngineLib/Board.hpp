@@ -27,6 +27,12 @@ public:
     std::size_t getMoveNumber() const; // Starts at 1
     std::optional<Square> getEnPassantSquare() const; // Just behind the pawn that moved 2 squares
 
+    std::string fen() const;
+    bool operator==(const Board& other) const;
+    bool operator!=(const Board& other) const;
+
+    bool makeMove(Move const& move);
+
 private:
     struct CastlingAvailability {
         bool whiteQueenSide {false};
@@ -45,6 +51,8 @@ private:
     std::size_t m_moveNumber {0};
     std::optional<Square> m_enPassantSquare {std::nullopt};
 };
+
+std::ostream & operator<<(std::ostream &os, Board const& b);
 
 }
 
