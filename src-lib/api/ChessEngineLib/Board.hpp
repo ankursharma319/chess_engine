@@ -20,11 +20,12 @@ public:
 
     using Board2dArray = std::array<std::array<std::optional<Piece>, 8>, 8>;
     Board2dArray const& grid() const;
+    std::optional<Piece> const& at(Square square) const;
     Color getNextMoveColor() const;
     bool isCastlingAvailable(Color color, Side side) const;
     std::size_t getHalfMoveClock() const; //For fifty move rule
     std::size_t getMoveNumber() const; // Starts at 1
-    std::optional<Square> getEnPassantSquare(); // Just behind the pawn that moved 2 squares
+    std::optional<Square> getEnPassantSquare() const; // Just behind the pawn that moved 2 squares
 
 private:
     struct CastlingAvailability {

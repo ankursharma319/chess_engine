@@ -216,7 +216,7 @@ std::size_t Board::getMoveNumber() const {
     return m_moveNumber;
 }
 
-std::optional<Square> Board::getEnPassantSquare() {
+std::optional<Square> Board::getEnPassantSquare() const {
     return m_enPassantSquare;
 }
 
@@ -244,6 +244,10 @@ std::optional<Board::CastlingAvailability> Board::parse_castling_availability(st
         }
     }
     return result;
+}
+
+std::optional<Piece> const& Board::at(Square square) const {
+    return m_grid.at(square.col).at(square.row);
 }
 
 }

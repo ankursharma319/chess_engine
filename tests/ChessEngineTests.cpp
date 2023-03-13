@@ -4,6 +4,7 @@
 
 #include "ChessEngineLib/Engine.hpp"
 #include "ChessEngineLib/Board.hpp"
+#include "ChessEngineLib/Move.hpp"
 
 GTEST_API_ int main(int argc, char **argv) {
     printf("Running main() from ChessEngineTests.cpp\n");
@@ -173,15 +174,17 @@ TEST_F(EngineTestFixture, generates_correct_legal_moves_for_each_square_starting
 
 TEST_F(EngineTestFixture, generates_correct_legal_moves_for_random_more_complex_position) {
     Board board = Board::fromFen("rn1qk2r/5ppp/4pn2/pPpp1b2/1b1P1B2/4PN1P/PP2KPP1/RN1Q1B1R w kq a6 0 9").value();
+    EXPECT_TRUE(board.getEnPassantSquare().has_value());
+    EXPECT_EQ((Square {0,5}), board.getEnPassantSquare().value());
     std::unordered_set<Square> nonZeroMoveSquares = {
-        {1,0}, {3,0}, {7,0}, {0,1}, {1,1}, {6,1}, {7,1},
+        {1,0}, {3,0}, {7,0}, {0,1}, {1,1}, {6,1},
         {4,2}, {5,2}, {7,2}, {3,3}, {5,3}, {1,4}
     };
     std::unordered_map<Square, std::unordered_set<Square>> expectedDestinations = {
         {{1,0}, {{0,2},{2,2},{3,1}}}, // Knight
         {{3,0}, {{2,0},{4,0},{2,1},{3,1},{1,2},{3,2},{0,3}}}, //Queen
         {{7,0}, {{6,0},{7,1}}}, //Rook
-        {{5,3}, {{7,1},{6,2},{4,4},{3,5},{2,6},{6,4},{7,5}}}, // Bishop
+        {{5,3}, {{7,1},{6,2},{4,4},{3,5},{2,6},{1,7},{6,4},{7,5}}}, // Bishop
         {{5,2}, {{3,1},{4,0},{4,4},{6,0},{6,4},{7,1},{7,3}}}, // Knight
         {{1,4}, {{1,5},{0,5}}}, //Pawn (enpassant)
         {{3,3}, {{2,4}}}, //Pawn (capture available,forward blocked)
@@ -192,12 +195,12 @@ TEST_F(EngineTestFixture, generates_correct_legal_moves_for_random_more_complex_
             Square start_square = Square {col, row};
             std::unordered_set<Square> destinations = generateLegalDestinations(board, start_square);
             if (nonZeroMoveSquares.count(start_square)) {
-                EXPECT_GT(destinations.size(), 0);
+                EXPECT_GT(destinations.size(), 0) << "for square " << start_square;
             } else {
-                EXPECT_EQ(0, destinations.size());
+                EXPECT_EQ(0, destinations.size()) << "for square " << start_square;
             }
             if (expectedDestinations.count(start_square)) {
-                EXPECT_EQ(expectedDestinations.at(start_square), destinations);
+                EXPECT_EQ(expectedDestinations.at(start_square), destinations) << "for square " << start_square;
             }
         }
     }
