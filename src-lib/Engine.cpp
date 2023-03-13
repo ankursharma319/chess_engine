@@ -190,6 +190,10 @@ bool validateFen(std::string const& fen) {
 }
 
 std::unordered_set<Square> generateLegalDestinations(Board const& board, Square source) {
+    return generatePseudoLegalDestinations(board, source);
+}
+
+std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, Square source) {
     std::optional<Piece> const& piece = board.grid().at(source.col).at(source.row);
     if (!piece.has_value()) {
         return {};
@@ -211,7 +215,6 @@ std::unordered_set<Square> generateLegalDestinations(Board const& board, Square 
         case Piece::Type::King:
             return king_destinations(board, source);
     }
-    // TODO For all these moves consider checks
     return {};
 }
 

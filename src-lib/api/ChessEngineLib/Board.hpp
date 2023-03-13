@@ -39,6 +39,7 @@ private:
         bool whiteKingSide {false};
         bool blackQueenSide {false};
         bool blackKingSide {false};
+        bool operator==(const CastlingAvailability& other) const;
     };
 
     Board() = default;

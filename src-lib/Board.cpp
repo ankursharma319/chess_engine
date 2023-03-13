@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <sstream>
 
 namespace {
 
@@ -125,6 +126,66 @@ std::optional<ChessEngineLib::Board::Board2dArray> parse_pieces(std::string cons
         }
     }
     return grid;
+}
+
+void write_grid_fen_chunk(std::ostream& os, ChessEngineLib::Board::Board2dArray const& grid) {
+    for (std::uint8_t row=7; row <= 7; row--) {
+        std::uint8_t current_gap = 0;
+        for (std::uint8_t col=0; col < 8; col++) {
+            if (grid[col][row].has_value()) {
+                if (current_gap != 0) {
+                    os << +current_gap;
+                }
+                os << grid[col][row].value().fen_symbol();
+                current_gap = 0;
+            } else {
+                current_gap ++;
+            }
+        }
+        if (current_gap != 0) {
+            os << +current_gap;
+        }
+        if (row != 0) { os << "/"; }
+    }
+}
+
+void write_next_move_color_fen_chunk(std::ostream& os, ChessEngineLib::Color color) {
+    if (color == ChessEngineLib::Color::White) {
+        os << "w";
+    } else  {
+        os << "b";
+    }
+};
+void write_castling_availability_fen_chunk(std::ostream& os, ChessEngineLib::Board const& board) {
+    bool atleast_one = false;
+    if (board.isCastlingAvailable(ChessEngineLib::Color::White, ChessEngineLib::Side::KingSide)) {
+        os << "K";
+        atleast_one = true;
+    }
+    if (board.isCastlingAvailable(ChessEngineLib::Color::White, ChessEngineLib::Side::QueenSide)) {
+        os << "Q";
+        atleast_one = true;
+    }
+    if (board.isCastlingAvailable(ChessEngineLib::Color::Black, ChessEngineLib::Side::KingSide)) {
+        os << "k";
+        atleast_one = true;
+    }
+    if (board.isCastlingAvailable(ChessEngineLib::Color::Black, ChessEngineLib::Side::QueenSide)) {
+        os << "q";
+        atleast_one = true;
+    }
+    if (!atleast_one) {
+        os << "-";
+    }
+}
+
+void write_en_passant_fen_chunk(std::ostream& os, std::optional<ChessEngineLib::Square> const& en_passant_square) {
+    if (!en_passant_square.has_value()) {
+        os << "-";
+        return;
+    }
+    ChessEngineLib::Square square = en_passant_square.value();
+    os << square.pgn_file() << +square.pgn_rank();
 }
 
 }
@@ -248,6 +309,52 @@ std::optional<Board::CastlingAvailability> Board::parse_castling_availability(st
 
 std::optional<Piece> const& Board::at(Square square) const {
     return m_grid.at(square.col).at(square.row);
+}
+
+std::string Board::fen() const {
+    std::ostringstream oss;
+    oss << *this;
+    return oss.str();
+}
+
+bool Board::CastlingAvailability::operator==(const Board::CastlingAvailability& other) const {
+    return
+        (blackKingSide == other.blackKingSide) &&
+        (whiteKingSide == other.whiteKingSide) &&
+        (blackQueenSide == other.blackQueenSide) &&
+        (whiteQueenSide == other.whiteQueenSide);
+}
+
+bool Board::operator==(const Board& other) const {
+    return
+        (grid() == other.grid()) &&
+        (m_castlingAvailability == other.m_castlingAvailability) &&
+        (getNextMoveColor() == other.getNextMoveColor()) &&
+        (getMoveNumber() == other.getMoveNumber()) &&
+        (getHalfMoveClock() == other.getHalfMoveClock()) &&
+        (getEnPassantSquare() == other.getEnPassantSquare());
+}
+
+bool Board::operator!=(const Board& other) const {
+    return !(*this == other);
+}
+
+std::ostream & operator<<(std::ostream &os, Board const& b) {
+    write_grid_fen_chunk(os, b.grid());
+    os << " ";
+    write_next_move_color_fen_chunk(os, b.getNextMoveColor());
+    os << " ";
+    write_castling_availability_fen_chunk(os, b);
+    os << " ";
+    write_en_passant_fen_chunk(os, b.getEnPassantSquare());
+    os << " " << b.getHalfMoveClock();
+    os << " " << b.getMoveNumber();
+    return os;
+}
+
+bool Board::makeMove(Move const& move) {
+    (void) move;
+    return false;
 }
 
 }

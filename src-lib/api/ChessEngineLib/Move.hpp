@@ -1,6 +1,7 @@
 #ifndef CHESS_STRUCTS_HPP
 #define CHESS_STRUCTS_HPP
 
+#include <_ctype.h>
 #include <string>
 #include <array>
 #include <optional>
@@ -19,6 +20,12 @@ struct Square {
 
     bool operator==(Square other) const {
         return (col == other.col) && (row == other.row);
+    }
+    char pgn_rank() const {
+        return row + 1;
+    }
+    char pgn_file() const {
+        return 'a' + col;
     }
 };
 
@@ -40,6 +47,34 @@ struct Piece {
 
     bool operator==(const Piece& other) const {
         return (type == other.type) && (color == other.color);
+    }
+
+    char fen_symbol() const {
+        char c;
+        switch (type) {
+            case Type::King:
+                c = 'k';
+                break;
+            case Type::Queen:
+                c = 'q';
+                break;
+            case Type::Rook:
+                c = 'r';
+                break;
+            case Type::Bishop:
+                c = 'b';
+                break;
+            case Type::Knight:
+                c = 'n';
+                break;
+            case Type::Pawn:
+                c = 'p';
+                break;
+        }
+        if (color == Color::White) {
+            c = toupper(c);
+        }
+        return c;
     }
 };
 
