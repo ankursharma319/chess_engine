@@ -70,9 +70,9 @@ std::unordered_set<ChessEngineLib::Square> pawn_destinations(
     std::unordered_set<ChessEngineLib::Square> dests {};
     if (!board.grid().at(source.col).at(source.row + movement_dir).has_value()) {
         dests.insert({source.col, static_cast<std::uint8_t>(source.row + movement_dir)});
-    }
-    if (spawn_position && !board.grid().at(source.col).at(source.row + movement_dir*2)) {
-        dests.insert({source.col, static_cast<std::uint8_t>(source.row + movement_dir * 2)});
+        if (spawn_position && !board.grid().at(source.col).at(source.row + movement_dir*2)) {
+            dests.insert({source.col, static_cast<std::uint8_t>(source.row + movement_dir * 2)});
+        }
     }
     if (board.getEnPassantSquare().has_value() &&
         board.getEnPassantSquare().value().row == source.row + movement_dir &&

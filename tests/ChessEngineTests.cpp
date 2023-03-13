@@ -214,3 +214,10 @@ TEST_F(EngineTestFixture, generates_correct_legal_moves_for_king_includes_castli
     EXPECT_EQ(expectedDestinations, destinations) << "for black king at square " << start_square;
 }
 
+TEST_F(EngineTestFixture, generates_correct_legal_moves_for_pawn_which_is_blocked_at_spawn) {
+    Board board = Board::fromFen("r3k2r/ppq1bpp1/P1nppn2/2p5/4P3/1PNP1P1p/1BPQBP1P/R3K2R w KQkq - 0 13").value();
+    Square start_square = Square {7, 1};
+    std::unordered_set<Square> destinations = generateLegalDestinations(board, start_square);
+    EXPECT_TRUE(destinations.empty()) << "for white pawn at square " << start_square;
+}
+
