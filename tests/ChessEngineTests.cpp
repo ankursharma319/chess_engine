@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <glog/logging.h>
+#include <unordered_map>
 
 #include "ChessEngineLib/Engine.hpp"
 #include "ChessEngineLib/Board.hpp"
@@ -75,38 +76,38 @@ TEST_F(EngineTestFixture, construct_correct_board_from_starting_position_fen) {
 
     for (int c = 0; c < 8; c++) {
         for (int r = 2; r < 6; r++) {
-            EXPECT_FALSE(board.getContents()[c][r].has_value());
+            EXPECT_FALSE(board.grid()[c][r].has_value());
         }
     }
 
     for (int c = 0; c < 8; c++) {
-        EXPECT_EQ(white_pawn, board.getContents()[c][1].value());
-        EXPECT_EQ(black_pawn, board.getContents()[c][6].value());
+        EXPECT_EQ(white_pawn, board.grid()[c][1].value());
+        EXPECT_EQ(black_pawn, board.grid()[c][6].value());
     }
 
-    EXPECT_EQ(black_rook, board.getContents()[0][7].value());
-    EXPECT_EQ(black_rook, board.getContents()[7][7].value());
+    EXPECT_EQ(black_rook, board.grid()[0][7].value());
+    EXPECT_EQ(black_rook, board.grid()[7][7].value());
 
-    EXPECT_EQ(white_rook, board.getContents()[0][0].value());
-    EXPECT_EQ(white_rook, board.getContents()[7][0].value());
+    EXPECT_EQ(white_rook, board.grid()[0][0].value());
+    EXPECT_EQ(white_rook, board.grid()[7][0].value());
 
-    EXPECT_EQ(black_knight, board.getContents()[1][7].value());
-    EXPECT_EQ(black_knight, board.getContents()[6][7].value());
+    EXPECT_EQ(black_knight, board.grid()[1][7].value());
+    EXPECT_EQ(black_knight, board.grid()[6][7].value());
 
-    EXPECT_EQ(white_knight, board.getContents()[1][0].value());
-    EXPECT_EQ(white_knight, board.getContents()[6][0].value());
+    EXPECT_EQ(white_knight, board.grid()[1][0].value());
+    EXPECT_EQ(white_knight, board.grid()[6][0].value());
 
-    EXPECT_EQ(black_bishop, board.getContents()[2][7].value());
-    EXPECT_EQ(black_bishop, board.getContents()[5][7].value());
+    EXPECT_EQ(black_bishop, board.grid()[2][7].value());
+    EXPECT_EQ(black_bishop, board.grid()[5][7].value());
 
-    EXPECT_EQ(white_bishop, board.getContents()[2][0].value());
-    EXPECT_EQ(white_bishop, board.getContents()[5][0].value());
+    EXPECT_EQ(white_bishop, board.grid()[2][0].value());
+    EXPECT_EQ(white_bishop, board.grid()[5][0].value());
 
-    EXPECT_EQ(black_queen, board.getContents()[3][7].value());
-    EXPECT_EQ(black_king, board.getContents()[4][7].value());
+    EXPECT_EQ(black_queen, board.grid()[3][7].value());
+    EXPECT_EQ(black_king, board.grid()[4][7].value());
 
-    EXPECT_EQ(white_queen, board.getContents()[3][0].value());
-    EXPECT_EQ(white_king, board.getContents()[4][0].value());
+    EXPECT_EQ(white_queen, board.grid()[3][0].value());
+    EXPECT_EQ(white_king, board.grid()[4][0].value());
 
     EXPECT_EQ(Color::White, board.getNextMoveColor());
     EXPECT_TRUE(board.isCastlingAvailable(Color::White, Side::KingSide));
@@ -124,19 +125,80 @@ TEST_F(EngineTestFixture, construct_correct_board_from_another_random_fen) {
     ASSERT_TRUE(Board::fromFen(fen).has_value());
     Board board = Board::fromFen(fen).value();
 
-    ASSERT_TRUE(board.getContents()[3][5].has_value());
-    ASSERT_TRUE(board.getContents()[4][4].has_value());
-    ASSERT_TRUE(board.getContents()[5][2].has_value());
-    EXPECT_EQ(black_pawn, board.getContents()[3][5].value());
-    EXPECT_EQ(black_pawn, board.getContents()[4][4].value());
-    EXPECT_EQ(white_knight, board.getContents()[5][2].value());
+    ASSERT_TRUE(board.grid()[3][5].has_value());
+    ASSERT_TRUE(board.grid()[4][4].has_value());
+    ASSERT_TRUE(board.grid()[5][2].has_value());
+    EXPECT_EQ(black_pawn, board.grid()[3][5].value());
+    EXPECT_EQ(black_pawn, board.grid()[4][4].value());
+    EXPECT_EQ(white_knight, board.grid()[5][2].value());
 
-    ASSERT_TRUE(board.getContents()[6][3].has_value());
-    EXPECT_EQ(black_bishop, board.getContents()[6][3].value());
-    EXPECT_FALSE(board.getContents()[7][4].has_value());
+    ASSERT_TRUE(board.grid()[6][3].has_value());
+    EXPECT_EQ(black_bishop, board.grid()[6][3].value());
+    EXPECT_FALSE(board.grid()[7][4].has_value());
 
     EXPECT_EQ(Color::Black, board.getNextMoveColor());
     EXPECT_EQ(3, board.getHalfMoveClock());
     EXPECT_EQ(4, board.getMoveNumber());
     EXPECT_FALSE(board.getEnPassantSquare().has_value());
+}
+
+TEST_F(EngineTestFixture, generates_correct_legal_moves_for_each_square_starting_position) {
+    Board board = Board::fromFen(starting_position_fen).value();
+    std::unordered_set<Square> nonZeroMoveSquares = {
+        {1,0}, {6,0}, {0,1}, {1,1}, {2,1}, {3,1}, {4,1}, {5,1}, {6,1}, {7,1}
+    };
+    std::unordered_map<Square, std::unordered_set<Square>> expectedDestinations = {
+        {{1,0}, {{0,2},{2,2}}},
+        {{6,0}, {{5,2},{7,2}}},
+        {{0,1}, {{0,2},{0,3}}},
+        {{1,1}, {{1,2},{1,3}}},
+        {{4,1}, {{4,2},{4,3}}},
+        {{7,1}, {{7,2},{7,3}}},
+    };
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            Square start_square = Square {col, row};
+            std::unordered_set<Square> destinations = generateLegalDestinations(board, start_square);
+            if (nonZeroMoveSquares.count(start_square)) {
+                EXPECT_GT(destinations.size(), 0);
+            } else {
+                EXPECT_EQ(0, destinations.size());
+            }
+            if (expectedDestinations.count(start_square)) {
+                EXPECT_EQ(expectedDestinations.at(start_square), destinations);
+            }
+        }
+    }
+}
+
+TEST_F(EngineTestFixture, generates_correct_legal_moves_for_random_more_complex_position) {
+    Board board = Board::fromFen("rn1qk2r/5ppp/4pn2/pPpp1b2/1b1P1B2/4PN1P/PP2KPP1/RN1Q1B1R w kq a6 0 9").value();
+    std::unordered_set<Square> nonZeroMoveSquares = {
+        {1,0}, {3,0}, {7,0}, {0,1}, {1,1}, {6,1}, {7,1},
+        {4,2}, {5,2}, {7,2}, {3,3}, {5,3}, {1,4}
+    };
+    std::unordered_map<Square, std::unordered_set<Square>> expectedDestinations = {
+        {{1,0}, {{0,2},{2,2},{3,1}}}, // Knight
+        {{3,0}, {{2,0},{4,0},{2,1},{3,1},{1,2},{3,2},{0,3}}}, //Queen
+        {{7,0}, {{6,0},{7,1}}}, //Rook
+        {{5,3}, {{7,1},{6,2},{4,4},{3,5},{2,6},{6,4},{7,5}}}, // Bishop
+        {{5,2}, {{3,1},{4,0},{4,4},{6,0},{6,4},{7,1},{7,3}}}, // Knight
+        {{1,4}, {{1,5},{0,5}}}, //Pawn (enpassant)
+        {{3,3}, {{2,4}}}, //Pawn (capture available,forward blocked)
+        {{4,2}, {{4,3}}}, //Pawn
+    };
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            Square start_square = Square {col, row};
+            std::unordered_set<Square> destinations = generateLegalDestinations(board, start_square);
+            if (nonZeroMoveSquares.count(start_square)) {
+                EXPECT_GT(destinations.size(), 0);
+            } else {
+                EXPECT_EQ(0, destinations.size());
+            }
+            if (expectedDestinations.count(start_square)) {
+                EXPECT_EQ(expectedDestinations.at(start_square), destinations);
+            }
+        }
+    }
 }

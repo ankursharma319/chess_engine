@@ -5,6 +5,7 @@
 #include <array>
 #include <optional>
 #include <ostream>
+#include <functional>
 
 namespace ChessEngineLib {
 
@@ -15,7 +16,16 @@ enum Color {
 struct Square {
     std::uint8_t col;
     std::uint8_t row;
+
+    bool operator==(Square other) const {
+        return (col == other.col) && (row == other.row);
+    }
 };
+
+inline std::ostream & operator<<(std::ostream &os, Square s) {
+    os << "(" << +s.col << "," << +s.row << ")";
+    return os;
+}
 
 struct Piece {
     enum Type {
@@ -81,5 +91,17 @@ struct Move {
 };
 
 }
+
+// custom specialization of std::hash can be injected in namespace std
+template<>
+struct std::hash<ChessEngineLib::Square>
+{
+    std::size_t operator()(ChessEngineLib::Square s) const noexcept
+    {
+        std::size_t h1 = std::hash<std::uint8_t>{}(s.col);
+        std::size_t h2 = std::hash<std::uint8_t>{}(s.row);
+        return h1 ^ (h2 << 1); // or use boost::hash_combine
+    }
+};
 
 #endif

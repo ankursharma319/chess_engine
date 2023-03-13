@@ -188,7 +188,7 @@ std::optional<Board> Board::fromFen(std::string const& fen) {
     return board;
 }
 
-std::array<std::array<std::optional<Piece>, 8>, 8> Board::getContents() const {
+std::array<std::array<std::optional<Piece>, 8>, 8> const& Board::grid() const {
     return m_grid;
 }
 

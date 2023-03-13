@@ -19,7 +19,7 @@ public:
     ~Board() = default;
 
     using Board2dArray = std::array<std::array<std::optional<Piece>, 8>, 8>;
-    Board2dArray getContents() const;
+    Board2dArray const& grid() const;
     Color getNextMoveColor() const;
     bool isCastlingAvailable(Color color, Side side) const;
     std::size_t getHalfMoveClock() const; //For fifty move rule
