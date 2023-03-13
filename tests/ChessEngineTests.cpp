@@ -205,3 +205,12 @@ TEST_F(EngineTestFixture, generates_correct_legal_moves_for_random_more_complex_
         }
     }
 }
+
+TEST_F(EngineTestFixture, generates_correct_legal_moves_for_king_includes_castling) {
+    Board board = Board::fromFen("r3k2r/ppq1bppp/2nppn2/2p5/P3P1b1/1PNP1N2/1BPQBPPP/R3K2R b KQkq - 0 9").value();
+    Square start_square = Square {4, 7};
+    std::unordered_set<Square> expectedDestinations = {{{2,7},{3,7},{3,6},{5,7},{6,7}}};
+    std::unordered_set<Square> destinations = generateLegalDestinations(board, start_square);
+    EXPECT_EQ(expectedDestinations, destinations) << "for black king at square " << start_square;
+}
+

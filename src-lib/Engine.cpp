@@ -60,7 +60,6 @@ std::unordered_set<ChessEngineLib::Square> bishop_destinations(
 std::unordered_set<ChessEngineLib::Square> pawn_destinations(
     ChessEngineLib::Board const& board, ChessEngineLib::Square source
 ) {
-    // TODO: count different promotions as different moves
     ChessEngineLib::Piece piece = board.at(source).value();
     assert(piece.type == ChessEngineLib::Piece::Type::Pawn);
     assert(source.row != 0 && source.row != 7);
@@ -134,11 +133,51 @@ std::unordered_set<ChessEngineLib::Square> knight_destinations(
 ) {
     return short_range_piece_destinations(board, source, {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}});
 }
+bool castling_allowed(
+    ChessEngineLib::Board const& board,
+    ChessEngineLib::Color color,
+    ChessEngineLib::Side side
+) {
+    if (!board.isCastlingAvailable(color, side)) {
+        return false;
+    }
+    std::unordered_set<ChessEngineLib::Square> vacant_squares_needed {};
+    if (color == ChessEngineLib::Color::Black && side == ChessEngineLib::Side::KingSide) {
+        vacant_squares_needed = {{5,7},{6,7}};
+    } else if (color == ChessEngineLib::Color::White && side == ChessEngineLib::Side::KingSide) {
+        vacant_squares_needed = {{5,0},{6,0}};
+    } else if (color == ChessEngineLib::Color::Black && side == ChessEngineLib::Side::QueenSide) {
+        vacant_squares_needed = {{1,7},{2,7},{3,7}};
+    } else if (color == ChessEngineLib::Color::White && side == ChessEngineLib::Side::QueenSide) {
+        vacant_squares_needed = {{1,0},{2,0},{3,0}};
+    } else {
+        assert(false);
+    }
+    for (ChessEngineLib::Square square: vacant_squares_needed) {
+        if (board.at(square).has_value()) {
+            return false;
+        }
+    }
+    return true;
+}
 
 std::unordered_set<ChessEngineLib::Square> king_destinations(
     ChessEngineLib::Board const& board, ChessEngineLib::Square source
 ) {
-    return short_range_piece_destinations(board, source, {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}});
+    using namespace ChessEngineLib;
+    std::unordered_set<Square> dests =
+        short_range_piece_destinations(board, source, {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}});
+    Piece const& piece = board.at(source).value();
+    bool spawn_position = piece.color == Color::White ? source == Square({4,0}) : source == Square({4,7});
+    if(castling_allowed(board, piece.color, ChessEngineLib::Side::KingSide)) {
+        assert(spawn_position);
+        dests.insert(Square({6,source.row}));
+    }
+    if(castling_allowed(board, piece.color, ChessEngineLib::Side::QueenSide)) {
+        assert(spawn_position);
+        dests.insert(Square({2,source.row}));
+    }
+    return dests;
 }
 
 }
@@ -173,7 +212,6 @@ std::unordered_set<Square> generateLegalDestinations(Board const& board, Square 
             return king_destinations(board, source);
     }
     // TODO For all these moves consider checks
-    // TODO count castling moves
     return {};
 }
 

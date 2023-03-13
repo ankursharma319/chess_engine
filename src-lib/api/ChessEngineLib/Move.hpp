@@ -88,6 +88,7 @@ struct Move {
     Piece piece;
     Square fromSquare;
     Square toSquare;
+    std::optional<Piece::Type> promotionTo;
 };
 
 }
