@@ -49,6 +49,10 @@ struct Piece {
         return (type == other.type) && (color == other.color);
     }
 
+    bool operator!=(const Piece& other) const {
+        return !(*this == other);
+    }
+
     char fen_symbol() const {
         char c;
         switch (type) {
@@ -130,6 +134,12 @@ struct Move {
     Square toSquare;
     std::optional<Piece::Type> promotionTo {std::nullopt};
 };
+
+
+inline std::ostream & operator<<(std::ostream &os, Move const& m) {
+    os << m.piece << " from " << m.fromSquare << " to " << m.toSquare;
+    return os;
+}
 
 }
 

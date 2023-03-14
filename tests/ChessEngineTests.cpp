@@ -256,7 +256,7 @@ TEST_F(EngineTestFixture, equality_operator_for_boards) {
     EXPECT_NE(board1, board6);
 }
 
-TEST_F(EngineTestFixture, board_allows_making_pseudolegal_moves) {
+TEST_F(EngineTestFixture, board_allows_making_legal_moves) {
     Board board = Board::fromFen("rn1qk2r/5ppp/4pn2/pPpp1b2/1b1P1B2/4PN1P/PP2KPP1/RN1Q1B1R w kq a6 0 9").value();
     Board board_init = board;
     std::unordered_map<Square, std::unordered_set<Square>> expectedValidDestinations = {
@@ -277,14 +277,14 @@ TEST_F(EngineTestFixture, board_allows_making_pseudolegal_moves) {
         Piece piece = board.at(src).value();
         for(Square dst: dsts) {
             Move move {piece, src, dst};
-            EXPECT_TRUE(board.makeMove(move));
+            EXPECT_TRUE(makeMove(board, move)) << " for move " << move;
             EXPECT_EQ(piece, board.at(dst).value());
             // en passant might still put some piece on dst
             if (piece.type != Piece::Type::King) {
                 EXPECT_FALSE(board.at(src).has_value());
             }
-            EXPECT_FALSE(board.at({0,0}).has_value());
-            EXPECT_FALSE(board.at({7,7}).has_value());
+            EXPECT_TRUE(board.at({0,0}).has_value());
+            EXPECT_TRUE(board.at({7,7}).has_value());
             EXPECT_NE(board_init, board);
             board = board_init;
         }
@@ -295,7 +295,7 @@ TEST_F(EngineTestFixture, board_allows_making_pseudolegal_moves) {
                 Square dst = Square {col, row};
                 Piece piece = board.at(src).value_or(black_king);
                 Move move {piece, src, dst};
-                EXPECT_FALSE(board.makeMove(move));
+                EXPECT_FALSE(makeMove(board, move));
                 EXPECT_EQ(board_init, board);
             }
         }
@@ -305,9 +305,9 @@ TEST_F(EngineTestFixture, board_allows_making_pseudolegal_moves) {
 TEST_F(EngineTestFixture, fen_gets_updated_after_legal_move) {
     std::string fen = "rnbqk2r/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR b KQkq - 0 4";
     Board board = Board::fromFen(fen).value();
-    EXPECT_FALSE(board.makeMove(Move(black_rook, {4,7}, {6,7})));
+    EXPECT_FALSE(makeMove(board, Move(black_rook, {4,7}, {6,7})));
     EXPECT_EQ(fen, board.fen());
-    EXPECT_TRUE(board.makeMove(Move(black_king, {4,7}, {6,7})));
+    EXPECT_TRUE(makeMove(board, Move(black_king, {4,7}, {6,7})));
     EXPECT_EQ("rnbq1rk1/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR w KQ - 1 5", board.fen());
 }
 

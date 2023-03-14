@@ -31,7 +31,7 @@ public:
     bool operator==(const Board& other) const;
     bool operator!=(const Board& other) const;
 
-    bool makeMove(Move const& move);
+    void forceMakeMove(Move const& move);
 
 private:
     struct CastlingAvailability {
@@ -44,6 +44,7 @@ private:
 
     Board() = default;
     static std::optional<CastlingAvailability> parse_castling_availability(std::string const& fen_chunk);
+    void expireCastlingAvailability(Color color, Side side);
 
     Board2dArray m_grid;
     Color m_nextMoveColor {Color::Black};

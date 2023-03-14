@@ -1,4 +1,5 @@
 #include "Board.hpp"
+#include "Engine.hpp"
 #include "Move.hpp"
 
 #include <nlohmann/json.hpp>
@@ -352,9 +353,81 @@ std::ostream & operator<<(std::ostream &os, Board const& b) {
     return os;
 }
 
-bool Board::makeMove(Move const& move) {
-    (void) move;
-    return false;
+void Board::expireCastlingAvailability(Color color, Side side) {
+    if (color == Color::Black && side == Side::KingSide) {
+        m_castlingAvailability.blackKingSide = false;
+    } else if (color == Color::Black && side == Side::QueenSide) {
+        m_castlingAvailability.blackQueenSide = false;
+    } else if (color == Color::White && side == Side::QueenSide) {
+        m_castlingAvailability.whiteQueenSide = false;
+    } else {
+        m_castlingAvailability.whiteKingSide = false;
+    }
+}
+
+// No validation done whether the move is legal or not
+void Board::forceMakeMove(Move const& move) {
+    assert(at(move.fromSquare) == std::make_optional(move.piece));
+    m_nextMoveColor = m_nextMoveColor == Color::Black ? Color::White : Color::Black;
+    bool is_capture = at(move.toSquare).has_value();
+    bool is_pawn_move = move.piece.type == Piece::Type::Pawn;
+    if (is_capture || is_pawn_move) {
+        m_halfMoveClock = 0;
+    } else {
+        m_halfMoveClock ++;
+    }
+    if (is_capture) {
+        assert(at(move.toSquare).value().color != move.piece.color);
+    }
+    if (move.piece.color == Color::Black) {
+        m_moveNumber ++;
+    }
+    if (move.piece.type == Piece::Type::King) {
+        expireCastlingAvailability(move.piece.color, Side::KingSide);
+        expireCastlingAvailability(move.piece.color, Side::QueenSide);
+    }
+    if (move.piece.type == Piece::Type::Rook && move.piece.color == Color::White) {
+        if (move.fromSquare == Square({0,0})) {
+            expireCastlingAvailability(move.piece.color, Side::QueenSide);
+        } else if (move.fromSquare == Square({7,0})) {
+            expireCastlingAvailability(move.piece.color, Side::KingSide);
+        }
+    }
+    if (move.piece.type == Piece::Type::Rook && move.piece.color == Color::Black) {
+        if (move.fromSquare == Square({0,7})) {
+            expireCastlingAvailability(move.piece.color, Side::QueenSide);
+        } else if (move.fromSquare == Square({7,7})) {
+            expireCastlingAvailability(move.piece.color, Side::KingSide);
+        }
+    }
+    if (move.piece.type == Piece::Type::Pawn && std::abs(move.fromSquare.row - move.toSquare.row) == 2) {
+        std::uint8_t pawn_direction = move.piece.color == Color::Black ? -1 : 1;
+        m_enPassantSquare = Square({move.fromSquare.col, static_cast<uint8_t>(move.fromSquare.row + pawn_direction)});
+    } else {
+        m_enPassantSquare = std::nullopt;
+    }
+    m_grid[move.fromSquare.col][move.fromSquare.row] = std::nullopt;
+    m_grid[move.toSquare.col][move.toSquare.row] = move.piece;
+    bool is_castling = move.piece.type == Piece::Type::King && std::abs(move.fromSquare.col - move.toSquare.col) >= 2;
+    if (is_castling) {
+        if (move.toSquare.col == 6) {
+            m_grid[5][move.toSquare.row] = m_grid.at(7).at(move.toSquare.row);
+            m_grid[7][move.toSquare.row] = std::nullopt;
+            assert(grid().at(5).at(move.toSquare.row).value().type == Piece::Type::Rook);
+        } else {
+            assert(move.toSquare.col == 2);
+            m_grid[3][move.toSquare.row] = m_grid.at(7).at(move.toSquare.row);
+            m_grid[0][move.toSquare.row] = std::nullopt;
+            assert(grid().at(3).at(move.toSquare.row).value().type == Piece::Type::Rook);
+        }
+    }
+    if (move.promotionTo.has_value()) {
+        assert(move.piece.type == Piece::Type::Pawn);
+        assert(move.toSquare.row == 0 || move.toSquare.row == 7);
+        assert(move.promotionTo.value() != Piece::Type::Pawn);
+        assert(move.promotionTo.value() != Piece::Type::King);
+        m_grid[move.toSquare.col][move.toSquare.row] = Piece {move.promotionTo.value(), move.piece.color};
+    }
 }
 
 }

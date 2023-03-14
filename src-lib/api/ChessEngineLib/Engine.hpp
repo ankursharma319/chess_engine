@@ -13,6 +13,9 @@ std::unordered_set<Square> generateLegalDestinations(Board const& board, Square 
 // pseudo-legal is union of legal moves and moves which allow king capture next move
 std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, Square source);
 
+bool makeMove(Board& board, Move const& move);
+bool isMovePseudoLegal(Board const& board, Move const& move);
+
 }
 
 #endif
