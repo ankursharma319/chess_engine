@@ -1,5 +1,5 @@
-#ifndef ENGINE_HPP
-#define ENGINE_HPP
+#ifndef GAME_ENGINE_HPP
+#define GAME_ENGINE_HPP
 
 #include <string>
 #include <unordered_set>

@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <unordered_map>
 
-#include "ChessEngineLib/Engine.hpp"
+#include "ChessEngineLib/GameEngine.hpp"
 #include "ChessEngineLib/Board.hpp"
 #include "ChessEngineLib/Move.hpp"
 
