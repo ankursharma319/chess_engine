@@ -125,8 +125,9 @@ inline std::ostream & operator<<(std::ostream &os, Piece const& p) {
 
 struct Move {
     Move() = delete;
-    Move(Piece const& piece, Square from_square, Square to_square)
-    : piece(piece), fromSquare(from_square), toSquare(to_square)
+    Move(Piece const& piece, Square from_square, Square to_square,
+        std::optional<Piece::Type> const& promotion_to = std::nullopt
+    ): piece(piece), fromSquare(from_square), toSquare(to_square), promotionTo(promotion_to)
     {}
 
     Piece piece;

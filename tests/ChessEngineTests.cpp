@@ -324,3 +324,21 @@ TEST_F(EngineTestFixture, enpassant_captured_pawn_removed_from_board_after_make_
     EXPECT_EQ("rnbqk2r/p1pp1pbp/1P3np1/4p3/3P3P/2N5/PP2PPP1/R1BQKBNR b KQkq - 0 6", board.fen());
 }
 
+TEST_F(EngineTestFixture, promotion_of_pawn_is_allowed) {
+    std::string fen = "8/3P4/p4ppp/1p2nk2/5N2/6P1/P5KP/1R6 w - - 0 36";
+    Board board = Board::fromFen(fen).value();
+
+    EXPECT_TRUE(board.at({3,6}).has_value());
+    EXPECT_EQ(white_pawn, board.at({3,6}).value());
+    EXPECT_FALSE(board.at({3,7}).has_value());
+
+    EXPECT_FALSE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::King)));
+    EXPECT_FALSE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::Pawn)));
+    EXPECT_EQ(fen, board.fen());
+
+    EXPECT_TRUE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::Queen)));
+    EXPECT_FALSE(board.at({3,6}).has_value());
+    EXPECT_TRUE(board.at({3,7}).has_value());
+    EXPECT_EQ(white_queen, board.at({3,7}).value());
+    EXPECT_EQ("3Q4/8/p4ppp/1p2nk2/5N2/6P1/P5KP/1R6 b - - 0 36", board.fen());
+}

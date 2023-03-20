@@ -432,7 +432,6 @@ void Board::forceMakeMove(Move const& move) {
             assert(grid().at(3).at(move.toSquare.row).value().type == Piece::Type::Rook);
         }
     }
-    // TODO: tests for promotion scenarios
     if (move.promotionTo.has_value()) {
         assert(move.piece.type == Piece::Type::Pawn);
         assert(move.toSquare.row == 0 || move.toSquare.row == 7);
