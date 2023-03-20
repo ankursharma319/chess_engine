@@ -192,6 +192,7 @@ bool is_pawn_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
     // straight move
     if (move.fromSquare.col == move.toSquare.col) {
         if(board.at(move.toSquare).has_value()) {
+            VLOG(3) << "illegal straight pawn move because there is a piece in at destination" << move.toSquare;
             return false;
         }
         std::uint8_t expected_double_move_row = expected_single_move_row + movement_dir;
@@ -205,6 +206,7 @@ bool is_pawn_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
         } else if (move.toSquare.row == expected_double_move_row) {
             return spawn_position && !board.grid().at(move.fromSquare.col).at(expected_single_move_row).has_value();
         } else {
+            VLOG(3) << "illegal pawn move because pawn dont move like that: " << move;
             return false;
         }
     }
@@ -220,17 +222,24 @@ bool is_pawn_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
 bool is_rook_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLib::Move const& move) {
     std::int8_t direction_col = move.toSquare.col - move.fromSquare.col;
     std::int8_t direction_row = move.toSquare.row - move.fromSquare.row;
-    if ((direction_row != 0) || (direction_col != 0)) {
-        return false;
-    }
     direction_col = std::clamp<std::int8_t>(direction_col, -1, 1);
     direction_row = std::clamp<std::int8_t>(direction_row, -1, 1);
+    if ((direction_row != 0) && (direction_col != 0)) {
+        VLOG(3) << "illegal move because rook dont move in the direction (" << +direction_col << ", " << +direction_row << ")";
+        return false;
+    }
+    VLOG(5) << "moving in direction (" << +direction_col << ", " << +direction_row << ")";
+    VLOG(5) << "move = " << move;
     for (
         std::uint8_t col = move.fromSquare.col + direction_col, row = move.fromSquare.row + direction_row;
-        (col != move.toSquare.col) && (row != move.toSquare.row) && col < 8 && row < 8;
+        (col != move.toSquare.col) || (row != move.toSquare.row);
         col += direction_col, row += direction_row
     ) {
+        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
+        assert(col < 8);
+        assert(row < 8);
         if (board.grid().at(col).at(row).has_value()) {
+            VLOG(3) << "illegal move because there is a piece in the way at (" << col << ", " << row << ")";
             return false;
         }
     }
@@ -241,18 +250,23 @@ bool is_queen_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineL
     std::int8_t direction_col = move.toSquare.col - move.fromSquare.col;
     std::int8_t direction_row = move.toSquare.row - move.fromSquare.row;
     if ((std::abs(direction_col) != std::abs(direction_row)) &&
-        ((direction_row != 0) || (direction_col != 0))
+        (direction_row != 0) && (direction_col != 0)
     ) {
+        VLOG(3) << "illegal move because queen dont move in the direction (" << +direction_col << ", " << +direction_row << ")";
         return false;
     }
     direction_col = std::clamp<std::int8_t>(direction_col, -1, 1);
     direction_row = std::clamp<std::int8_t>(direction_row, -1, 1);
     for (
         std::uint8_t col = move.fromSquare.col + direction_col, row = move.fromSquare.row + direction_row;
-        (col != move.toSquare.col) && (row != move.toSquare.row) && col < 8 && row < 8;
+        (col != move.toSquare.col) || (row != move.toSquare.row);
         col += direction_col, row += direction_row
     ) {
+        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
+        assert(col < 8);
+        assert(row < 8);
         if (board.grid().at(col).at(row).has_value()) {
+            VLOG(3) << "illegal move because there is a piece in the way at (" << col << ", " << row << ")";
             return false;
         }
     }
@@ -260,17 +274,24 @@ bool is_queen_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineL
 }
 
 bool is_bishop_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLib::Move const& move) {
-    std::int8_t direction_col = move.toSquare.col > move.fromSquare.col ? 1 : -1;
-    std::int8_t direction_row = move.toSquare.row > move.fromSquare.row ? 1 : -1;
+    std::int8_t direction_col = move.toSquare.col - move.fromSquare.col;
+    std::int8_t direction_row = move.toSquare.row - move.fromSquare.row;
     if (std::abs(move.toSquare.col - move.fromSquare.col) != std::abs(move.toSquare.row - move.fromSquare.row)) {
+        VLOG(3) << "illegal move because bishop dont move in the direction (" << +direction_col << ", " << +direction_row << ")";
         return false;
     }
+    direction_col = std::clamp<std::int8_t>(direction_col, -1, 1);
+    direction_row = std::clamp<std::int8_t>(direction_row, -1, 1);
     for (
         std::uint8_t col = move.fromSquare.col + direction_col, row = move.fromSquare.row + direction_row;
-        (col != move.toSquare.col) && (row != move.toSquare.row);
+        (col != move.toSquare.col) || (row != move.toSquare.row);
         col += direction_col, row += direction_row
     ) {
+        assert(col < 8);
+        assert(row < 8);
+        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
         if (board.grid().at(col).at(row).has_value()) {
+            VLOG(3) << "illegal move because there is a piece in the way at (" << col << ", " << row << ")";
             return false;
         }
     }
@@ -288,6 +309,7 @@ bool is_knight_move_pseudo_legal(ChessEngineLib::Board const&, ChessEngineLib::M
     if (std::abs(direction.first) == 1 && std::abs(direction.second) == 2) {
         return true;
     }
+    VLOG(3) << "illegal move because knight dont move in the direction (" << +direction.first << ", " << +direction.second << ")";
     return false;
 }
 
@@ -300,11 +322,13 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
     if (std::abs(direction.first) <= 1 && std::abs(direction.second) <= 1) {
         return true;
     }
+
     // castle
+    VLOG(3) << "not a normal king move, check if its castling and legal";
     bool spawn_position = move.piece.color == ChessEngineLib::White ?
         move.fromSquare == ChessEngineLib::Square({4,0}) :
         move.fromSquare == ChessEngineLib::Square({4,7});
-    bool row_changed = move.fromSquare.row == move.toSquare.row;
+    bool row_changed = move.fromSquare.row != move.toSquare.row;
     bool castle_kingside_played = move.toSquare.col == 6 && spawn_position && !row_changed;
     bool castle_queenside_played = move.toSquare.col == 2 && spawn_position && !row_changed;
     if (castle_kingside_played) {
@@ -313,6 +337,7 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
     if (castle_queenside_played) {
         return castling_allowed(board, move.piece.color, ChessEngineLib::Side::QueenSide);
     }
+    VLOG(3) << "castling also not played, not legal";
     return false;
 }
 
@@ -357,12 +382,15 @@ std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, S
 bool isMovePseudoLegal(Board const& board, Move const& move) {
     std::optional<Piece> const& piece = board.at(move.fromSquare);
     if (!piece.has_value()) {
+        VLOG(3) << "illegal move because no piece on source";
         return false;
     }
     if (piece.value() != move.piece) {
+        VLOG(3) << "illegal move because of piece mismatch";
         return false;
     }
     if (piece.value().color != board.getNextMoveColor()) {
+        VLOG(3) << "illegal move because next move is not of this pieces color";
         return false;
     }
     assert(move.fromSquare.row < 8);
@@ -371,9 +399,11 @@ bool isMovePseudoLegal(Board const& board, Move const& move) {
     assert(move.toSquare.col < 8);
 
     if (board.at(move.toSquare).has_value() && board.at(move.toSquare).value().color == piece.value().color) {
+        VLOG(3) << "illegal move because target square occupied";
         return false;
     }
     if (move.fromSquare == move.toSquare) {
+        VLOG(3) << "illegal move because source square and target square are the same";
         return false;
     }
     switch (piece.value().type) {
@@ -393,6 +423,7 @@ bool isMovePseudoLegal(Board const& board, Move const& move) {
 }
 
 bool makeMove(Board& board, Move const& move) {
+    VLOG(1) << "asked to make move " << move;
     if(!isMovePseudoLegal(board, move)) {
         return false;
     }
