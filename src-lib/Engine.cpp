@@ -210,7 +210,6 @@ bool is_pawn_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
             return false;
         }
     }
-    // TODO: make sure remove enpassanted captured piece from board in forceMakeMove
     bool is_capture = board.at(move.toSquare).has_value() ||
         (board.getEnPassantSquare().has_value() && board.getEnPassantSquare().value() == move.toSquare);
     bool is_correct_row = move.toSquare.row == expected_single_move_row;

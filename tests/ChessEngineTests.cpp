@@ -302,12 +302,25 @@ TEST_F(EngineTestFixture, board_allows_making_legal_moves) {
     }
 }
 
-TEST_F(EngineTestFixture, fen_gets_updated_after_legal_move) {
+TEST_F(EngineTestFixture, fen_gets_updated_after_legal_castling_move) {
     std::string fen = "rnbqk2r/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR b KQkq - 0 4";
     Board board = Board::fromFen(fen).value();
     EXPECT_FALSE(makeMove(board, Move(black_rook, {4,7}, {6,7})));
     EXPECT_EQ(fen, board.fen());
     EXPECT_TRUE(makeMove(board, Move(black_king, {4,7}, {6,7})));
     EXPECT_EQ("rnbq1rk1/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR w KQ - 1 5", board.fen());
+}
+
+TEST_F(EngineTestFixture, enpassant_captured_pawn_removed_from_board_after_make_move) {
+    std::string fen = "rnbqk2r/p1pp1pbp/5np1/1pP1p3/3P3P/2N5/PP2PPP1/R1BQKBNR w KQkq b6 0 6";
+    Board board = Board::fromFen(fen).value();
+    EXPECT_TRUE(board.at({2,4}).has_value());
+    EXPECT_TRUE(board.at({1,4}).has_value());
+    EXPECT_FALSE(board.at({1,5}).has_value());
+    EXPECT_TRUE(makeMove(board, Move(white_pawn, {2,4}, {1,5})));
+    EXPECT_FALSE(board.at({2,4}).has_value());
+    EXPECT_FALSE(board.at({1,4}).has_value());
+    EXPECT_TRUE(board.at({1,5}).has_value());
+    EXPECT_EQ("rnbqk2r/p1pp1pbp/1P3np1/4p3/3P3P/2N5/PP2PPP1/R1BQKBNR b KQkq - 0 6", board.fen());
 }
 

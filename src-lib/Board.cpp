@@ -400,14 +400,25 @@ void Board::forceMakeMove(Move const& move) {
             expireCastlingAvailability(move.piece.color, Side::KingSide);
         }
     }
+
+    if (move.piece.type == Piece::Type::Pawn &&
+        m_enPassantSquare.has_value() &&
+        move.toSquare == m_enPassantSquare.value()
+    ) {
+        assert(!at(m_enPassantSquare.value()).has_value());
+        m_grid[move.toSquare.col][move.fromSquare.row] = std::nullopt;
+    }
+
     if (move.piece.type == Piece::Type::Pawn && std::abs(move.fromSquare.row - move.toSquare.row) == 2) {
         std::uint8_t pawn_direction = move.piece.color == Color::Black ? -1 : 1;
         m_enPassantSquare = Square({move.fromSquare.col, static_cast<uint8_t>(move.fromSquare.row + pawn_direction)});
     } else {
         m_enPassantSquare = std::nullopt;
     }
+
     m_grid[move.fromSquare.col][move.fromSquare.row] = std::nullopt;
     m_grid[move.toSquare.col][move.toSquare.row] = move.piece;
+
     bool is_castling = move.piece.type == Piece::Type::King && std::abs(move.fromSquare.col - move.toSquare.col) >= 2;
     if (is_castling) {
         if (move.toSquare.col == 6) {
@@ -421,6 +432,7 @@ void Board::forceMakeMove(Move const& move) {
             assert(grid().at(3).at(move.toSquare.row).value().type == Piece::Type::Rook);
         }
     }
+    // TODO: tests for promotion scenarios
     if (move.promotionTo.has_value()) {
         assert(move.piece.type == Piece::Type::Pawn);
         assert(move.toSquare.row == 0 || move.toSquare.row == 7);
