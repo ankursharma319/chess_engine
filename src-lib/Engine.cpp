@@ -341,6 +341,21 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
     return false;
 }
 
+bool isKingCapturePossibleNextMove(ChessEngineLib::Board const& board) {
+    using namespace ChessEngineLib;
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            std::unordered_set<Square> res = generatePseudoLegalDestinations(board, Square({col, row}));
+            for (Square const& sqr: res) {
+                if (board.at(sqr).has_value() && board.at(sqr).value().type == Piece::Type::King) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 }
 
 namespace ChessEngineLib {
@@ -351,7 +366,19 @@ bool validateFen(std::string const& fen) {
 }
 
 std::unordered_set<Square> generateLegalDestinations(Board const& board, Square source) {
-    return generatePseudoLegalDestinations(board, source);
+    std::unordered_set<Square> dsts = generatePseudoLegalDestinations(board, source);
+    for (auto it = dsts.begin(); it != dsts.end();) {
+        Square dst = *it;
+        Board board_copy = board;
+        Move move = Move(board.at(source).value(), source, dst);
+        board_copy.forceMakeMove(move);
+        if (isKingCapturePossibleNextMove(board_copy)) {
+            it = dsts.erase(it);
+        } else {
+            it++;
+        }
+    }
+    return dsts;
 }
 
 std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, Square source) {
@@ -427,7 +454,13 @@ bool makeMove(Board& board, Move const& move) {
     if(!isMovePseudoLegal(board, move)) {
         return false;
     }
+    Board board_before_move = board;
     board.forceMakeMove(move);
+    if (isKingCapturePossibleNextMove(board)) {
+        VLOG(2) << "illegal move because king would die immediately";
+        board = board_before_move;
+        return false;
+    }
     return true;
 }
 
