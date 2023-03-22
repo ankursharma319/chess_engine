@@ -1,6 +1,6 @@
 enable_testing()
 
-add_executable(ChessEngineTests ChessEngineTests.cpp)
+add_executable(ChessEngineTests ChessEngineTests.cpp AiPlayersTests.cpp)
 
 target_link_libraries(ChessEngineTests gtest glog::glog ChessEngineLib)
 
