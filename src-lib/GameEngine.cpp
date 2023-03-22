@@ -463,4 +463,23 @@ bool makeMove(Board& board, Move const& move) {
     return true;
 }
 
+std::optional<ResultType> isGameOver(Board const& board) {
+    if (board.getHalfMoveClock() >= 50) {
+        VLOG(2) << "game over because of 50 move rule";
+        return ResultType::Draw;
+    }
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            std::unordered_set<Square> legal_moves = generateLegalDestinations(board, {col, row});
+            if (!legal_moves.empty()) {
+                VLOG(4) << "found " << legal_moves.size() << " legal moves from ("
+                    << +col << ", " << +row << "), so not game over";
+                return std::nullopt;
+            }
+        }
+    }
+    VLOG(2) << "TODO: no legal moves try to determine if stalemate or checkmate";
+    return ResultType::Draw;
+}
+
 }

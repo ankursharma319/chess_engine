@@ -342,3 +342,49 @@ TEST_F(EngineTestFixture, promotion_of_pawn_is_allowed) {
     EXPECT_EQ(white_queen, board.at({3,7}).value());
     EXPECT_EQ("3Q4/8/p4ppp/1p2nk2/5N2/6P1/P5KP/1R6 b - - 0 36", board.fen());
 }
+
+TEST_F(EngineTestFixture, result_from_board_position) {
+    std::array non_finished_fens = {
+        "5rk1/5p1p/8/3N4/8/8/1B6/7K w - - 0 1",
+        "r4k1r/1q3p1p/p1N2p2/1pp5/8/1PPP4/1P3PPP/R1B1R1K1 w - - 0 1",
+        "7k/6p1/6Q1/8/8/1B6/8/6K1 w - - 0 1",
+        "r3k3/ppp2pp1/8/2bpP2P/7q/1B1p1Q2/PPPP2P1/RNB4K w q - 1 2",
+        "2kr4/8/1Q6/8/8/8/5PPP/3R1RK1 w - - 0 1",
+    };
+    for (auto const& fen: non_finished_fens) {
+        EXPECT_EQ(std::nullopt, isGameOver(Board::fromFen(fen).value())) << "for fen: " << fen;
+    }
+
+    std::array drawn_fens = {
+        "5r1k/5p1p/5N2/8/8/8/1B6/7K w - - 50 26",
+        "k7/8/8/8/8/4B3/1R2K3/8 b - - 1 1",
+        "8/k1N5/8/1R1K4/8/8/8/8 b - - 6 10",
+    };
+    for (auto const& fen: drawn_fens) {
+        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        EXPECT_EQ(ResultType::Draw, isGameOver(Board::fromFen(fen).value()).value());
+    }
+
+    std::array white_win_fens = {
+        "5rk1/4Np1p/8/8/8/8/1B6/7K b - - 1 1",
+        "r4k1r/1q3p1p/p1N2p1B/1pp5/8/1PPP4/1P3PPP/R3R1K1 b - - 1 1",
+        "7k/6p1/8/7Q/8/1B6/8/6K1 b - - 1 1",
+        "2kR4/8/1Q6/8/8/8/5PPP/5RK1 b - - 0 1",
+        "Rkq5/1pp5/1N6/8/8/8/8/6K1 b - - 3 2",
+    };
+    for (auto const& fen: white_win_fens) {
+        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        EXPECT_EQ(ResultType::WhiteWin, isGameOver(Board::fromFen(fen).value()).value());
+    }
+
+    std::array black_win_fens = {
+        "r3k3/ppp2pp1/8/3pP2P/8/1B1p3Q/PPPP1bPK/RNB3q1 w q - 9 6",
+        "R7/8/8/7p/8/6k1/7n/3r2K1 w - - 3 3",
+        "rn4k1/ppp2ppp/5n2/4b1B1/4P1b1/2P1Q3/PP3PPP/RN1rK1NR w KQ - 0 3",
+    };
+    for (auto const& fen: black_win_fens) {
+        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        EXPECT_EQ(ResultType::BlackWin, isGameOver(Board::fromFen(fen).value()).value());
+    }
+}
+

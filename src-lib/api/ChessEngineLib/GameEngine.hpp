@@ -16,6 +16,12 @@ std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, S
 bool makeMove(Board& board, Move const& move);
 bool isMovePseudoLegal(Board const& board, Move const& move);
 
+enum class ResultType {
+    Draw, WhiteWin, BlackWin
+};
+
+std::optional<ResultType> isGameOver(Board const& board);
+
 }
 
 #endif
