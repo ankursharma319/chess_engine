@@ -3,6 +3,8 @@
 
 #include <string>
 #include <unordered_set>
+#include <ostream>
+
 #include "Board.hpp"
 #include "Move.hpp"
 
@@ -19,6 +21,7 @@ bool isMovePseudoLegal(Board const& board, Move const& move);
 enum class ResultType {
     Draw, WhiteWin, BlackWin
 };
+std::ostream & operator<<(std::ostream &os, ResultType rt);
 
 std::optional<ResultType> isGameOver(Board const& board);
 

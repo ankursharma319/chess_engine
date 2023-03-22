@@ -441,4 +441,8 @@ void Board::forceMakeMove(Move const& move) {
     }
 }
 
+void Board::setNextMoveColor(Color color) {
+    m_nextMoveColor = color;
+}
+
 }

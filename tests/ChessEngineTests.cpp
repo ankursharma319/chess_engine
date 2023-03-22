@@ -352,7 +352,7 @@ TEST_F(EngineTestFixture, result_from_board_position) {
         "2kr4/8/1Q6/8/8/8/5PPP/3R1RK1 w - - 0 1",
     };
     for (auto const& fen: non_finished_fens) {
-        EXPECT_EQ(std::nullopt, isGameOver(Board::fromFen(fen).value())) << "for fen: " << fen;
+        ASSERT_EQ(std::nullopt, isGameOver(Board::fromFen(fen).value())) << "for fen: " << fen;
     }
 
     std::array drawn_fens = {
@@ -361,20 +361,20 @@ TEST_F(EngineTestFixture, result_from_board_position) {
         "8/k1N5/8/1R1K4/8/8/8/8 b - - 6 10",
     };
     for (auto const& fen: drawn_fens) {
-        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
-        EXPECT_EQ(ResultType::Draw, isGameOver(Board::fromFen(fen).value()).value());
+        ASSERT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        ASSERT_EQ(ResultType::Draw, isGameOver(Board::fromFen(fen).value()).value()) << "for fen: " << fen;
     }
 
     std::array white_win_fens = {
         "5rk1/4Np1p/8/8/8/8/1B6/7K b - - 1 1",
-        "r4k1r/1q3p1p/p1N2p1B/1pp5/8/1PPP4/1P3PPP/R3R1K1 b - - 1 1",
+        "r5kr/5p1p/pqN2p1B/1pp5/8/1PPP2R1/1P3PPP/R5K1 b - - 5 3",
         "7k/6p1/8/7Q/8/1B6/8/6K1 b - - 1 1",
         "2kR4/8/1Q6/8/8/8/5PPP/5RK1 b - - 0 1",
         "Rkq5/1pp5/1N6/8/8/8/8/6K1 b - - 3 2",
     };
     for (auto const& fen: white_win_fens) {
-        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
-        EXPECT_EQ(ResultType::WhiteWin, isGameOver(Board::fromFen(fen).value()).value());
+        ASSERT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        ASSERT_EQ(ResultType::WhiteWin, isGameOver(Board::fromFen(fen).value()).value()) << "for fen: " << fen;
     }
 
     std::array black_win_fens = {
@@ -383,8 +383,8 @@ TEST_F(EngineTestFixture, result_from_board_position) {
         "rn4k1/ppp2ppp/5n2/4b1B1/4P1b1/2P1Q3/PP3PPP/RN1rK1NR w KQ - 0 3",
     };
     for (auto const& fen: black_win_fens) {
-        EXPECT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
-        EXPECT_EQ(ResultType::BlackWin, isGameOver(Board::fromFen(fen).value()).value());
+        ASSERT_TRUE(isGameOver(Board::fromFen(fen).value()).has_value()) << "for fen: " << fen;
+        ASSERT_EQ(ResultType::BlackWin, isGameOver(Board::fromFen(fen).value()).value());
     }
 }
 

@@ -116,13 +116,13 @@ std::unordered_set<ChessEngineLib::Square> short_range_piece_destinations(
     std::unordered_set<ChessEngineLib::Square> dests {};
     for (auto const& direction: directions) {
         ChessEngineLib::Square dst = {
-            static_cast<uint8_t>(source.col + direction.first),
-            static_cast<uint8_t>(source.row + direction.second)
+            static_cast<std::uint8_t>(source.col + direction.first),
+            static_cast<std::uint8_t>(source.row + direction.second)
         };
         if (dst.col >= 8 || dst.row >= 8) {
             continue;
         }
-        if (board.at(dst).has_value()) {
+        if (board.at(dst).has_value() && board.at(dst).value().color == piece.color) {
             continue;
         }
         dests.insert(std::move(dst));
@@ -342,16 +342,22 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
 
 bool isKingCapturePossibleNextMove(ChessEngineLib::Board const& board) {
     using namespace ChessEngineLib;
+    VLOG(4) << "trying to check if king capture is possible next move by generating pseudolegal destinations in theoretical position";
     for (std::uint8_t col=0; col<8; col++) {
         for (std::uint8_t row=0; row<8; row++) {
             std::unordered_set<Square> res = generatePseudoLegalDestinations(board, Square({col, row}));
+            if (!res.empty()) {
+                VLOG(7) << "found " << res.size() << " pseudo legal-moves from square at (" << +col << ", " << +row << ")";
+            }
             for (Square const& sqr: res) {
                 if (board.at(sqr).has_value() && board.at(sqr).value().type == Piece::Type::King) {
+                    VLOG(4) << "determined that king capture is possible in theoretical position";
                     return true;
                 }
             }
         }
     }
+    VLOG(4) << "determined that king capture is not possible in theoretical position";
     return false;
 }
 
@@ -365,18 +371,24 @@ bool validateFen(std::string const& fen) {
 }
 
 std::unordered_set<Square> generateLegalDestinations(Board const& board, Square source) {
+    VLOG(2) << "generating pseudo-legal moves for source " << source;
     std::unordered_set<Square> dsts = generatePseudoLegalDestinations(board, source);
+    VLOG(2) << "found " << dsts.size() << " pseudo-legal moves from source square " << source;
     for (auto it = dsts.begin(); it != dsts.end();) {
         Square dst = *it;
         Board board_copy = board;
         Move move = Move(board.at(source).value(), source, dst);
         board_copy.forceMakeMove(move);
+        VLOG(4) << "check if king capture possible after theoretical move " << move;
         if (isKingCapturePossibleNextMove(board_copy)) {
+            VLOG(4) << "determined that king capture possible for move " << move;
             it = dsts.erase(it);
         } else {
+            VLOG(4) << "determined that move " << move << " is legal";
             it++;
         }
     }
+    VLOG(2) << "found " << dsts.size() << " fully legal moves from source " << source;
     return dsts;
 }
 
@@ -463,11 +475,27 @@ bool makeMove(Board& board, Move const& move) {
     return true;
 }
 
+std::ostream & operator<<(std::ostream &os, ResultType rt) {
+    switch (rt) {
+        case ResultType::Draw:
+            os << "Draw";
+            break;
+        case ResultType::WhiteWin:
+            os << "WhiteWin";
+            break;
+        case ResultType::BlackWin:
+            os << "BlackWin";
+            break;
+    }
+    return os;
+}
+
 std::optional<ResultType> isGameOver(Board const& board) {
     if (board.getHalfMoveClock() >= 50) {
         VLOG(2) << "game over because of 50 move rule";
         return ResultType::Draw;
     }
+    VLOG(2) << "try to check if there are any legal moves to determine if match is over";
     for (std::uint8_t col=0; col<8; col++) {
         for (std::uint8_t row=0; row<8; row++) {
             std::unordered_set<Square> legal_moves = generateLegalDestinations(board, {col, row});
@@ -478,8 +506,18 @@ std::optional<ResultType> isGameOver(Board const& board) {
             }
         }
     }
-    VLOG(2) << "TODO: no legal moves try to determine if stalemate or checkmate";
-    return ResultType::Draw;
+    VLOG(2) << "no legal moves try to determine if stalemate or checkmate";
+    Board board_copy = board;
+    Color color = board.getNextMoveColor() == Color::White ? Color::Black : Color::White;
+    board_copy.setNextMoveColor(color);
+    if (!isKingCapturePossibleNextMove(board_copy)) {
+        return ResultType::Draw;
+    }
+    if (board.getNextMoveColor() == Color::White) {
+        return ResultType::BlackWin;
+    } else {
+        return ResultType::WhiteWin;
+    }
 }
 
 }

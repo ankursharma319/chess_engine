@@ -32,6 +32,7 @@ public:
     bool operator!=(const Board& other) const;
 
     void forceMakeMove(Move const& move);
+    void setNextMoveColor(Color color);
 
 private:
     struct CastlingAvailability {
