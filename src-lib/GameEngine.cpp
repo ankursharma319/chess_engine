@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <stdexcept>
 #include <unordered_set>
 #include <utility>
 #include <valarray>
@@ -458,6 +459,7 @@ bool isMovePseudoLegal(Board const& board, Move const& move) {
         case Piece::Type::King:
             return is_king_move_pseudo_legal(board, move);
     }
+    throw std::runtime_error("Impossible");
 }
 
 bool makeMove(Board& board, Move const& move) {

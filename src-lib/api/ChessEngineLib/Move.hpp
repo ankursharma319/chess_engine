@@ -1,7 +1,6 @@
 #ifndef CHESS_STRUCTS_HPP
 #define CHESS_STRUCTS_HPP
 
-#include <_ctype.h>
 #include <string>
 #include <array>
 #include <optional>
@@ -54,7 +53,7 @@ struct Piece {
     }
 
     char fen_symbol() const {
-        char c;
+        char c = 0;
         switch (type) {
             case Type::King:
                 c = 'k';
