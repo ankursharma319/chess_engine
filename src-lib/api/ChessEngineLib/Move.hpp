@@ -129,6 +129,14 @@ struct Move {
     ): piece(piece), fromSquare(from_square), toSquare(to_square), promotionTo(promotion_to)
     {}
 
+    bool operator==(Move const& other) const {
+        return
+            (piece == other.piece) &&
+            (fromSquare == other.fromSquare) &&
+            (toSquare == other.toSquare) &&
+            (promotionTo == other.promotionTo);
+    }
+
     Piece piece;
     Square fromSquare;
     Square toSquare;
@@ -152,6 +160,32 @@ struct std::hash<ChessEngineLib::Square>
         std::size_t h1 = std::hash<std::uint8_t>{}(s.col);
         std::size_t h2 = std::hash<std::uint8_t>{}(s.row);
         return h1 ^ (h2 << 1); // or use boost::hash_combine
+    }
+};
+
+template<>
+struct std::hash<ChessEngineLib::Piece>
+{
+    std::size_t operator()(ChessEngineLib::Piece const& p) const noexcept
+    {
+        std::size_t h1 = std::hash<ChessEngineLib::Piece::Type>{}(p.type);
+        std::size_t h2 = std::hash<ChessEngineLib::Color>{}(p.color);
+        return h1 ^ (h2 << 1);
+    }
+};
+
+template<>
+struct std::hash<ChessEngineLib::Move>
+{
+    std::size_t operator()(ChessEngineLib::Move const& s) const noexcept
+    {
+        std::size_t h1 = std::hash<ChessEngineLib::Square>{}(s.toSquare);
+        std::size_t h2 = std::hash<ChessEngineLib::Square>{}(s.fromSquare);
+        std::size_t h3 = std::hash<ChessEngineLib::Piece>{}(s.piece);
+        std::size_t h4 = std::hash<ChessEngineLib::Piece::Type>{}(
+            s.promotionTo.value_or(ChessEngineLib::Piece::Type::King)
+        );
+        return h1 ^ ((h2 ^ ((h3 ^ (h4 << 1)) << 1)) << 1);
     }
 };
 

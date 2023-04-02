@@ -34,8 +34,20 @@ protected:
 
 
 TEST_F(AiPlayerTestFixture, random_move_player_generates_moves) {
-    RandomMovePlayer rmp1 = RandomMovePlayer();
+    RandomMovePlayer rmp = RandomMovePlayer();
     Board board = Board::fromFen(starting_position_fen).value();
-    EXPECT_TRUE(rmp1.getMove(board).has_value());
+    std::optional<Move> move_opt = rmp.getMove(board);
+    ASSERT_TRUE(move_opt.has_value());
+    EXPECT_TRUE(
+        (white_pawn == move_opt.value().piece) ||
+        (white_knight == move_opt.value().piece)
+    );
+    EXPECT_TRUE(makeMove(board, move_opt.value()));
+    move_opt = rmp.getMove(board);
+    ASSERT_TRUE(move_opt.has_value());
+    EXPECT_TRUE(
+        (black_pawn == move_opt.value().piece) ||
+        (black_knight == move_opt.value().piece)
+    );
 }
 

@@ -522,4 +522,30 @@ std::optional<ResultType> isGameOver(Board const& board) {
     }
 }
 
+std::unordered_set<Move> getAllLegalMoves(Board const& board) {
+    auto is_pawn_promotion = [] (Piece const& piece, Square dst) -> bool {
+        return (piece.type == Piece::Type::Pawn) &&
+            ((piece.color == Color::White && dst.row == 7) ||
+            (piece.color == Color::Black && dst.row == 0));
+    };
+    std::unordered_set<Move> legal_moves {};
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            std::unordered_set<Square> legal_dsts = generateLegalDestinations(board, {col, row});
+            for (Square dst: legal_dsts) {
+                Piece const& piece = board.at({col, row}).value();
+                if (is_pawn_promotion(piece, dst)) {
+                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Rook));
+                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Queen));
+                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Bishop));
+                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Knight));
+                } else {
+                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst));
+                }
+            }
+        }
+    }
+    return legal_moves;
+}
+
 }

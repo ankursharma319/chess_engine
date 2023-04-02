@@ -14,6 +14,7 @@ bool validateFen(std::string const& fen);
 std::unordered_set<Square> generateLegalDestinations(Board const& board, Square source);
 // pseudo-legal is union of legal moves and moves which allow king capture next move
 std::unordered_set<Square> generatePseudoLegalDestinations(Board const& board, Square source);
+std::unordered_set<Move> getAllLegalMoves(Board const& board);
 
 bool makeMove(Board& board, Move const& move);
 bool isMovePseudoLegal(Board const& board, Move const& move);
