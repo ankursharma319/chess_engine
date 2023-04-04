@@ -421,15 +421,20 @@ void Board::forceMakeMove(Move const& move) {
 
     bool is_castling = move.piece.type == Piece::Type::King && std::abs(move.fromSquare.col - move.toSquare.col) >= 2;
     if (is_castling) {
+        assert(move.fromSquare.row == move.toSquare.row);
+        assert(move.fromSquare.col == 4);
         if (move.toSquare.col == 6) {
+            assert(grid().at(7).at(move.toSquare.row).value().type == Piece::Type::Rook);
+            assert(!grid().at(5).at(move.toSquare.row).has_value());
             m_grid[5][move.toSquare.row] = m_grid.at(7).at(move.toSquare.row);
             m_grid[7][move.toSquare.row] = std::nullopt;
-            assert(grid().at(5).at(move.toSquare.row).value().type == Piece::Type::Rook);
         } else {
             assert(move.toSquare.col == 2);
-            m_grid[3][move.toSquare.row] = m_grid.at(7).at(move.toSquare.row);
+            assert(grid().at(0).at(move.toSquare.row).value().type == Piece::Type::Rook);
+            assert(!grid().at(1).at(move.toSquare.row).has_value());
+            assert(!grid().at(3).at(move.toSquare.row).has_value());
+            m_grid[3][move.toSquare.row] = m_grid.at(0).at(move.toSquare.row);
             m_grid[0][move.toSquare.row] = std::nullopt;
-            assert(grid().at(3).at(move.toSquare.row).value().type == Piece::Type::Rook);
         }
     }
     if (move.promotionTo.has_value()) {
