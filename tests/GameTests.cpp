@@ -57,7 +57,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
     ASSERT_EQ("1992.11.04", game.sevenTagRoster().date);
-    ASSERT_EQ("Belgrade, Sergbia JUG", game.sevenTagRoster().site);
+    ASSERT_EQ("Belgrade, Serbia JUG", game.sevenTagRoster().site);
     ASSERT_EQ("29", game.sevenTagRoster().round);
     ASSERT_EQ("F/S Return Match", game.sevenTagRoster().event);
     ASSERT_EQ("Fischer, Robert J.", game.sevenTagRoster().white);
@@ -65,64 +65,64 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_EQ(ResultType::Draw, game.sevenTagRoster().result.value());
 
 
-    ASSERT_EQ(game.moveAt(1), game.moveAt(1, Color::White));
-    ASSERT_EQ(game.moveAt(2), game.moveAt(1, Color::Black));
-    ASSERT_EQ(game.moveAt(5), game.moveAt(3, Color::White));
-    ASSERT_EQ(game.moveAt(10), game.moveAt(5, Color::Black));
+    ASSERT_EQ(game.moveAt(1).value(), game.moveAt(1, Color::White));
+    ASSERT_EQ(game.moveAt(2).value(), game.moveAt(1, Color::Black));
+    ASSERT_EQ(game.moveAt(5).value(), game.moveAt(3, Color::White));
+    ASSERT_EQ(game.moveAt(10).value(), game.moveAt(5, Color::Black));
 
-    ASSERT_EQ(Move({white_pawn, {4,1}, {4, 3}}), game.moveAt(1).move);
-    ASSERT_EQ(white_pawn, game.moveAt(1).piece);
-    ASSERT_FALSE(game.moveAt(1).isCheck);
-    ASSERT_FALSE(game.moveAt(1).isCapture);
-    ASSERT_FALSE(game.moveAt(1).isCheckmate);
-    ASSERT_FALSE(game.moveAt(1).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(1).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(1).isCastle.has_value());
+    ASSERT_EQ(Move({white_pawn, {4,1}, {4, 3}}), game.moveAt(1).value().move);
+    ASSERT_EQ(white_pawn, game.moveAt(1).value().piece);
+    ASSERT_FALSE(game.moveAt(1).value().isCheck);
+    ASSERT_FALSE(game.moveAt(1).value().isCapture);
+    ASSERT_FALSE(game.moveAt(1).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(1).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(1).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(1).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({black_pawn, {4,6}, {4, 4}}), game.moveAt(2).move);
-    ASSERT_EQ(black_pawn, game.moveAt(2).piece);
-    ASSERT_FALSE(game.moveAt(2).isCheck);
-    ASSERT_FALSE(game.moveAt(2).isCapture);
-    ASSERT_FALSE(game.moveAt(2).isCheckmate);
-    ASSERT_FALSE(game.moveAt(2).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(2).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(2).isCastle.has_value());
+    ASSERT_EQ(Move({black_pawn, {4,6}, {4, 4}}), game.moveAt(2).value().move);
+    ASSERT_EQ(black_pawn, game.moveAt(2).value().piece);
+    ASSERT_FALSE(game.moveAt(2).value().isCheck);
+    ASSERT_FALSE(game.moveAt(2).value().isCapture);
+    ASSERT_FALSE(game.moveAt(2).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(2).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(2).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(2).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({white_king, {4,0}, {6, 0}}), game.moveAt(9).move);
-    ASSERT_EQ(white_king, game.moveAt(9).piece);
-    ASSERT_FALSE(game.moveAt(9).isCheck);
-    ASSERT_FALSE(game.moveAt(9).isCapture);
-    ASSERT_FALSE(game.moveAt(9).isCheckmate);
-    ASSERT_FALSE(game.moveAt(9).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(9).isSrcRankAmbigious);
-    ASSERT_EQ(Side::KingSide, game.moveAt(9).isCastle.value());
+    ASSERT_EQ(Move({white_king, {4,0}, {6, 0}}), game.moveAt(9).value().move);
+    ASSERT_EQ(white_king, game.moveAt(9).value().piece);
+    ASSERT_FALSE(game.moveAt(9).value().isCheck);
+    ASSERT_FALSE(game.moveAt(9).value().isCapture);
+    ASSERT_FALSE(game.moveAt(9).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(9).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(9).value().isSrcRankAmbigious);
+    ASSERT_EQ(Side::KingSide, game.moveAt(9).value().isCastle.value());
 
-    ASSERT_EQ(Move({black_knight, {1,7}, {3, 6}}), game.moveAt(20).move);
-    ASSERT_EQ(black_knight, game.moveAt(20).piece);
-    ASSERT_FALSE(game.moveAt(20).isCheck);
-    ASSERT_FALSE(game.moveAt(20).isCapture);
-    ASSERT_FALSE(game.moveAt(20).isCheckmate);
-    ASSERT_TRUE(game.moveAt(20).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(20).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(20).isCastle.has_value());
+    ASSERT_EQ(Move({black_knight, {1,7}, {3, 6}}), game.moveAt(20).value().move);
+    ASSERT_EQ(black_knight, game.moveAt(20).value().piece);
+    ASSERT_FALSE(game.moveAt(20).value().isCheck);
+    ASSERT_FALSE(game.moveAt(20).value().isCapture);
+    ASSERT_FALSE(game.moveAt(20).value().isCheckmate);
+    ASSERT_TRUE(game.moveAt(20).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(20).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(20).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({white_bishop, {1,2}, {2, 3}}), game.moveAt(43).move);
-    ASSERT_EQ(white_bishop, game.moveAt(43).piece);
-    ASSERT_FALSE(game.moveAt(43).isCheck);
-    ASSERT_TRUE(game.moveAt(43).isCapture);
-    ASSERT_FALSE(game.moveAt(43).isCheckmate);
-    ASSERT_FALSE(game.moveAt(43).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(43).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(43).isCastle.has_value());
+    ASSERT_EQ(Move({white_bishop, {1,2}, {2, 3}}), game.moveAt(43).value().move);
+    ASSERT_EQ(white_bishop, game.moveAt(43).value().piece);
+    ASSERT_FALSE(game.moveAt(43).value().isCheck);
+    ASSERT_TRUE(game.moveAt(43).value().isCapture);
+    ASSERT_FALSE(game.moveAt(43).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(43).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(43).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(43).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({black_rook, {4,7}, {4, 0}}), game.moveAt(50).move);
-    ASSERT_EQ(black_rook, game.moveAt(50).piece);
-    ASSERT_TRUE(game.moveAt(50).isCheck);
-    ASSERT_TRUE(game.moveAt(50).isCapture);
-    ASSERT_FALSE(game.moveAt(50).isCheckmate);
-    ASSERT_FALSE(game.moveAt(50).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(50).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(50).isCastle.has_value());
+    ASSERT_EQ(Move({black_rook, {4,7}, {4, 0}}), game.moveAt(50).value().move);
+    ASSERT_EQ(black_rook, game.moveAt(50).value().piece);
+    ASSERT_TRUE(game.moveAt(50).value().isCheck);
+    ASSERT_TRUE(game.moveAt(50).value().isCapture);
+    ASSERT_FALSE(game.moveAt(50).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(50).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(50).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(50).value().isCastle.has_value());
 }
 
 
@@ -154,23 +154,23 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move({white_pawn, {4,6}, {4, 7}, std::make_optional(Piece::Type::Queen)}), game.moveAt(87).move);
-    ASSERT_EQ(white_pawn, game.moveAt(87).piece);
-    ASSERT_TRUE(game.moveAt(87).isCheck);
-    ASSERT_FALSE(game.moveAt(87).isCapture);
-    ASSERT_FALSE(game.moveAt(87).isCheckmate);
-    ASSERT_FALSE(game.moveAt(87).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(87).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(87).isCastle.has_value());
+    ASSERT_EQ(Move({white_pawn, {4,6}, {4, 7}, std::make_optional(Piece::Type::Queen)}), game.moveAt(87).value().move);
+    ASSERT_EQ(white_pawn, game.moveAt(87).value().piece);
+    ASSERT_TRUE(game.moveAt(87).value().isCheck);
+    ASSERT_FALSE(game.moveAt(87).value().isCapture);
+    ASSERT_FALSE(game.moveAt(87).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(87).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(87).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(87).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({white_queen, {2,4}, {1, 3}}), game.moveAt(101).move);
-    ASSERT_EQ(white_queen, game.moveAt(101).piece);
-    ASSERT_TRUE(game.moveAt(101).isCheck);
-    ASSERT_FALSE(game.moveAt(101).isCapture);
-    ASSERT_TRUE(game.moveAt(101).isCheckmate);
-    ASSERT_FALSE(game.moveAt(101).isSrcFileAmbigious);
-    ASSERT_FALSE(game.moveAt(101).isSrcRankAmbigious);
-    ASSERT_FALSE(game.moveAt(101).isCastle.has_value());
+    ASSERT_EQ(Move({white_queen, {2,4}, {1, 3}}), game.moveAt(101).value().move);
+    ASSERT_EQ(white_queen, game.moveAt(101).value().piece);
+    ASSERT_TRUE(game.moveAt(101).value().isCheck);
+    ASSERT_FALSE(game.moveAt(101).value().isCapture);
+    ASSERT_TRUE(game.moveAt(101).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(101).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(101).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(101).value().isCastle.has_value());
 }
 
 TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
@@ -182,11 +182,11 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move(white_knight, {0,2}, {2, 3}), game.moveAt(45).move);
-    ASSERT_EQ(white_knight, game.moveAt(45).piece);
-    ASSERT_FALSE(game.moveAt(45).isCheck);
-    ASSERT_FALSE(game.moveAt(45).isCapture);
-    ASSERT_FALSE(game.moveAt(45).isCheckmate);
-    ASSERT_FALSE(game.moveAt(45).isSrcFileAmbigious);
-    ASSERT_TRUE(game.moveAt(45).isSrcRankAmbigious);
+    ASSERT_EQ(Move(white_knight, {0,2}, {2, 3}), game.moveAt(45).value().move);
+    ASSERT_EQ(white_knight, game.moveAt(45).value().piece);
+    ASSERT_FALSE(game.moveAt(45).value().isCheck);
+    ASSERT_FALSE(game.moveAt(45).value().isCapture);
+    ASSERT_FALSE(game.moveAt(45).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
+    ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
 }

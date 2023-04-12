@@ -51,8 +51,8 @@ public:
     std::string toPgn() const;
     SevenTagRoster const& sevenTagRoster() const;
 
-    MoveWithContext const& moveAt(std::size_t moveNum, Color color) const;
-    MoveWithContext const& moveAt(std::size_t halfMoveNum) const;
+    std::optional<MoveWithContext> moveAt(std::size_t moveNum, Color color) const;
+    std::optional<MoveWithContext> moveAt(std::size_t halfMoveNum) const;
 
 private:
     SevenTagRoster roster_;

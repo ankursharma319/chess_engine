@@ -7,7 +7,6 @@
 namespace ChessEngineLib {
 
 std::optional<Move> RandomMovePlayer::getMove(Board const& board) {
-    (void) board;
     VLOG(2) << "getMove called on board " << board;
     std::unordered_set<Move> moves = getAllLegalMoves(board);
     if (moves.empty()) {
