@@ -26,6 +26,17 @@ public:
         std::optional<ResultType> result;
     };
     struct MoveWithContext {
+        MoveWithContext(
+            Move const& move,
+            Piece const& piece,
+            bool is_capture,
+            bool is_check,
+            bool is_checkmate,
+            bool is_src_file_ambig,
+            bool is_src_rank_ambig,
+            std::optional<Side> is_castle
+        );
+
         Move move;
         Piece piece;
         bool isCapture;

@@ -190,3 +190,22 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
     ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
 }
+
+TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_both) {
+    std::string const pgn = R"raw(
+    )raw";
+
+    ASSERT_TRUE(false); // todo
+
+    std::optional<Game> game_opt = Game::fromPgn(pgn);
+    ASSERT_TRUE(game_opt.has_value());
+    Game game = game_opt.value();
+
+    ASSERT_EQ(Move(white_knight, {0,2}, {2, 3}), game.moveAt(45).value().move);
+    ASSERT_EQ(white_knight, game.moveAt(45).value().piece);
+    ASSERT_FALSE(game.moveAt(45).value().isCheck);
+    ASSERT_FALSE(game.moveAt(45).value().isCapture);
+    ASSERT_FALSE(game.moveAt(45).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
+    ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
+}

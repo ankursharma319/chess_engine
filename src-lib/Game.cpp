@@ -1,7 +1,9 @@
 #include "Game.hpp"
 #include "GameEngine.hpp"
+#include "Move.hpp"
 #include "glog/logging.h"
 #include <cassert>
+#include <cctype>
 #include <optional>
 
 namespace {
@@ -24,8 +26,12 @@ std::vector<std::string> split_string(
     return chunks;
 }
 
+bool is_spacy(char c) {
+    return c == ' ' || c == '\n' || c!='\t';
+}
+
 bool is_non_spacy(char c) {
-    return c != ' ' && c!= '\n' && c!='\t';
+    return !is_spacy(c);
 }
 
 std::optional<std::pair<Game::SevenTagRoster, std::size_t>> parseRoster(std::string const& pgn) {
@@ -102,11 +108,183 @@ std::optional<std::pair<Game::SevenTagRoster, std::size_t>> parseRoster(std::str
     return std::make_optional<std::pair<Game::SevenTagRoster, std::size_t>>(roster, i);
 }
 
-std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& pgn, std::size_t i) {
-    while (i < pgn.size()) {
-        i++;
+Piece::Type from_pgn_to_piece_type(char c) {
+    switch(c) {
+        case 'K':
+            return Piece::Type::King;
+        case 'Q':
+            return Piece::Type::Queen;
+        case 'B':
+            return Piece::Type::Bishop;
+        case 'R':
+            return Piece::Type::Rook;
+        case 'N':
+            return Piece::Type::Knight;
+        default:
+            return Piece::Type::Pawn;
     }
-    return std::nullopt;
+}
+
+std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& pgn, std::size_t i) {
+    std::vector<Game::MoveWithContext> moves {};
+    auto skip_comment = [](std::size_t i, std::string const& pgn) {
+        if (i >= pgn.size()) {
+            return i;
+        }
+        if (pgn.at(i) == '{') {
+            i++;
+            while (i < pgn.size() && pgn.at(i) != '}') {
+                i++;
+            }
+            return i;
+        }
+        if (pgn.at(i) == ';') {
+            i++;
+            while (i < pgn.size() && pgn.at(i) != '\n') {
+                i++;
+            }
+            return i;
+        }
+        return i;
+    };
+    auto skip_spacy = [](std::size_t i, std::string const& pgn) {
+        while (i < pgn.size() && is_spacy(pgn.at(i))) {
+            i++;
+        }
+        return i;
+    };
+    auto skip_to_legit_char = [skip_spacy, skip_comment] (std::size_t i, std::string const& pgn) {
+        while (i < pgn.size()) {
+            if (is_spacy(pgn.at(i))) {
+                i = skip_spacy(i, pgn);
+                continue;
+            }
+            if (pgn.at(i) == '{' || pgn.at(i) == ';') {
+                i = skip_comment(i, pgn);
+                continue;
+            }
+            return i;
+        }
+        return i;
+    };
+
+    auto parse_move = [] (std::size_t i, std::string const& pgn, Color color) -> std::optional<std::pair<std::size_t, Game::MoveWithContext>> {
+        bool is_valid_move = false;
+        Square from;
+        Square to;
+        Piece::Type type;
+        bool isCapture = false;
+        bool isCheck = false;
+        bool isCheckmate = false;
+        bool isSrcFileAmbigious = false;
+        bool isSrcRankAmbigious = false;
+        std::optional<Side> isCastle = std::nullopt;
+        std::optional<Piece::Type> promotionTo = std::nullopt;
+        if (i >= pgn.size()) {
+            return std::nullopt;
+        }
+        if (std::isalpha(pgn.at(i))) {
+            type = from_pgn_to_piece_type(pgn.at(i));
+            if (type != Piece::Type::Pawn) {
+                i++;
+            }
+        } else {
+            return std::nullopt;
+        }
+
+        if (i >= pgn.size()) {
+            return std::nullopt;
+        }
+        if (std::isalpha(pgn.at(i))) {
+            isSrcFileAmbigious = true;
+            to.col = pgn.at(i) - 'a';
+            i++;
+        } else {
+            return std::nullopt;
+        }
+
+        if (i >= pgn.size()) {
+            return std::nullopt;
+        }
+        if (std::isdigit(pgn.at(i))) {
+            isSrcRankAmbigious = true;
+            to.row = pgn.at(i) - '1';
+            i++;
+        } else {
+            return std::nullopt;
+        }
+
+        if (i < pgn.size() && std::isalnum(pgn.at(i))) {
+            from = to;
+            if (std::isalpha(pgn.at(i))) {
+                to.col = pgn.at(i) - 'a';
+                i++;
+            }
+            if (i < pgn.size() && std::isdigit(pgn.at(i))) {
+                to.row = pgn.at(i) - '1';
+                i++;
+            }
+        } else {
+            isSrcFileAmbigious = false;
+            isSrcRankAmbigious = false;
+        }
+
+        if (is_valid_move) {
+            Piece piece {type, color};
+            Move move {piece, from, to, promotionTo};
+            Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
+            return std::pair(i, mv);
+        }
+        return std::nullopt;
+    };
+
+    while (i < pgn.size()) {
+        i = skip_to_legit_char(i, pgn);
+        if (i >= pgn.size()) {
+            break;
+        }
+        if (!std::isdigit(pgn.at(i))) {
+            return std::nullopt;
+        }
+        std::size_t move_num = 0;
+        while (std::isdigit(pgn.at(i))) {
+            move_num = move_num*10 + pgn.at(i) - '0';
+            i++;
+        }
+        std::size_t i_prev = i;
+        i = skip_to_legit_char(i, pgn);
+        if (i == i_prev) {
+            return std::nullopt;
+        }
+        if (i >= pgn.size()) {
+            break;
+        }
+        std::optional<std::pair<std::size_t, Game::MoveWithContext>> res = parse_move(i, pgn, Color::White);
+        if (!res.has_value()) {
+            return std::nullopt;
+        }
+        i = res.value().first;
+        moves.push_back(res.value().second);
+
+        if(i<pgn.size() && std::isalnum(pgn.at(i))) {
+            return std::nullopt;
+        }
+
+        i = skip_to_legit_char(i, pgn);
+        if (i >= pgn.size()) {
+            break;
+        }
+        res = parse_move(i, pgn, Color::Black);
+        if (!res.has_value()) {
+            return std::nullopt;
+        }
+        i = res.value().first;
+        moves.push_back(res.value().second);
+        if(i<pgn.size() && std::isalnum(pgn.at(i))) {
+            return std::nullopt;
+        }
+    }
+    return std::make_optional(moves);
 }
 
 }
@@ -152,6 +330,26 @@ std::optional<Game::MoveWithContext> Game::moveAt(std::size_t halfMoveNum) const
     (void) halfMoveNum;
     return std::nullopt;
 }
+
+Game::MoveWithContext::MoveWithContext(
+    Move const& move,
+    Piece const& piece,
+    bool is_capture,
+    bool is_check,
+    bool is_checkmate,
+    bool is_src_file_ambig,
+    bool is_src_rank_ambig,
+    std::optional<Side> is_castle
+):
+move {move},
+piece {piece},
+isCapture(is_capture),
+isCheck(is_check),
+isCheckmate(is_checkmate),
+isSrcFileAmbigious(is_src_file_ambig),
+isSrcRankAmbigious(is_src_rank_ambig),
+isCastle(is_castle)
+{}
 
 }
 
