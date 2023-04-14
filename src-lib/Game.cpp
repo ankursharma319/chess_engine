@@ -27,7 +27,7 @@ std::vector<std::string> split_string(
 }
 
 bool is_spacy(char c) {
-    return c == ' ' || c == '\n' || c!='\t';
+    return c == ' ' || c == '\n' || c == '\t';
 }
 
 bool is_non_spacy(char c) {
@@ -125,9 +125,12 @@ Piece::Type from_pgn_to_piece_type(char c) {
     }
 }
 
-std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& pgn, std::size_t i) {
+std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<ResultType>>> parseMovesAndResult(std::string const& pgn, std::size_t i) {
     std::vector<Game::MoveWithContext> moves {};
+    std::optional<ResultType> result {};
+
     auto skip_comment = [](std::size_t i, std::string const& pgn) {
+        VLOG(6) << "asked to skip comment from i=" << i;
         if (i >= pgn.size()) {
             return i;
         }
@@ -136,6 +139,8 @@ std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& 
             while (i < pgn.size() && pgn.at(i) != '}') {
                 i++;
             }
+            i++;
+            VLOG(7) << "returning i = " << i << " after skipping block comment";
             return i;
         }
         if (pgn.at(i) == ';') {
@@ -143,14 +148,19 @@ std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& 
             while (i < pgn.size() && pgn.at(i) != '\n') {
                 i++;
             }
+            i++;
+            VLOG(7) << "returning i = " << i << " after skipping line comment";
             return i;
         }
+        VLOG(7) << "didnt skip any chars for comments";
         return i;
     };
     auto skip_spacy = [](std::size_t i, std::string const& pgn) {
+        VLOG(4) << "asked to skip space from i=" << i;
         while (i < pgn.size() && is_spacy(pgn.at(i))) {
             i++;
         }
+        VLOG(7) << "returning i = " << i << " after skipping chars for comments";
         return i;
     };
     auto skip_to_legit_char = [skip_spacy, skip_comment] (std::size_t i, std::string const& pgn) {
@@ -169,10 +179,9 @@ std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& 
     };
 
     auto parse_move = [] (std::size_t i, std::string const& pgn, Color color) -> std::optional<std::pair<std::size_t, Game::MoveWithContext>> {
-        bool is_valid_move = false;
-        Square from;
-        Square to;
-        Piece::Type type;
+        Square from {0,0};
+        Square to {0,0};
+        Piece::Type type = Piece::Type::Pawn;
         bool isCapture = false;
         bool isCheck = false;
         bool isCheckmate = false;
@@ -183,67 +192,127 @@ std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& 
         if (i >= pgn.size()) {
             return std::nullopt;
         }
-        if (std::isalpha(pgn.at(i))) {
-            type = from_pgn_to_piece_type(pgn.at(i));
-            if (type != Piece::Type::Pawn) {
-                i++;
-            }
-        } else {
-            return std::nullopt;
-        }
-
-        if (i >= pgn.size()) {
-            return std::nullopt;
-        }
-        if (std::isalpha(pgn.at(i))) {
-            isSrcFileAmbigious = true;
-            to.col = pgn.at(i) - 'a';
+        VLOG(3) << "asked to parse move from next few chars: " << pgn.substr(i, 7);
+        std::size_t init_i = i;
+        while(is_non_spacy(pgn.at(i))) {
             i++;
-        } else {
+        }
+        std::string chunk = pgn.substr(init_i, i-init_i);
+        VLOG(3) << "chunk = " << chunk;
+        if (chunk.size() < 2) {
+            VLOG(3) << "got chunk smaller than 2 chars";
             return std::nullopt;
+        }
+        std::size_t j=chunk.size()-1;
+        char c = chunk.at(j);
+        if (c == '#') {
+            isCheckmate = true;
+            j--;
+        } else if (c == '+') {
+            isCheck = true;
+            j--;
         }
 
-        if (i >= pgn.size()) {
-            return std::nullopt;
-        }
-        if (std::isdigit(pgn.at(i))) {
-            isSrcRankAmbigious = true;
-            to.row = pgn.at(i) - '1';
-            i++;
-        } else {
-            return std::nullopt;
-        }
-
-        if (i < pgn.size() && std::isalnum(pgn.at(i))) {
-            from = to;
-            if (std::isalpha(pgn.at(i))) {
-                to.col = pgn.at(i) - 'a';
-                i++;
+        if (chunk.substr(0,j+1) == "O-O" || chunk.substr(0, j+1) == "0-0-0") {
+            type = Piece::Type::King;
+            from.col = 4;
+            from.row = color == Color::White ? 0 : 7;
+            to.row = from.row;
+            if (chunk.substr(0, j+1) == "0-0-0") {
+                to.col = 2;
+                isCastle = std::make_optional(Side::QueenSide);
+            } else {
+                to.col = 6;
+                isCastle = std::make_optional(Side::KingSide);
             }
-            if (i < pgn.size() && std::isdigit(pgn.at(i))) {
-                to.row = pgn.at(i) - '1';
-                i++;
-            }
-        } else {
-            isSrcFileAmbigious = false;
-            isSrcRankAmbigious = false;
-        }
-
-        if (is_valid_move) {
             Piece piece {type, color};
             Move move {piece, from, to, promotionTo};
             Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
             return std::pair(i, mv);
         }
+
+        c = chunk.at(j);
+        if (!std::isdigit(c)) {
+            VLOG(3) << "didnt get correct to row digit";
+            return std::nullopt;
+        }
+        to.row = c - '1';
+        j--;
+
+        c = chunk.at(j);
+        if (!(c >= 'a' && c <= 'h')) {
+            VLOG(3) << "didnt get correct to col alphabet";
+            return std::nullopt;
+        }
+        to.col = c - 'a';
+        j--;
+
+        if (j < chunk.size() && chunk.at(j) == 'x') {
+            VLOG(7) << "parsing capture";
+            isCapture = true;
+            j--;
+        }
+        if (j < chunk.size() && std::isdigit(chunk.at(j))) {
+            VLOG(7) << "parsing src row";
+            from.row = chunk.at(j) - '1';
+            isSrcRankAmbigious = true;
+            j--;
+        }
+        if (j < chunk.size() && chunk.at(j) >= 'a' && chunk.at(j) <= 'h') {
+            VLOG(7) << "parsing src col";
+            from.col = chunk.at(j) - 'a';
+            isSrcFileAmbigious = true;
+            j--;
+        }
+        if (j < chunk.size() && std::isalpha(chunk.at(j))) {
+            VLOG(7) << "parsing type";
+            type = from_pgn_to_piece_type(pgn.at(j));
+            j--;
+        }
+
+        if (j < chunk.size()) {
+            VLOG(3) << "Expected to have processed all chars in the chunk but more left";
+            return std::nullopt;
+        }
+
+        Piece piece {type, color};
+        Move move {piece, from, to, promotionTo};
+        Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
+        return std::pair(i, mv);
+    };
+
+    auto parse_potential_result = [] (std::size_t i, std::string const& pgn) -> std::optional<ResultType> {
+        VLOG(7) << "parsing result, potentially";
+        if (i >= pgn.size()) {
+            return std::nullopt;
+        }
+        if (pgn.substr(i, 3) == "1-0") {
+            return ResultType::WhiteWin;
+        }
+        if (pgn.substr(i, 3) == "0-1") {
+            return ResultType::BlackWin;
+        }
+        if (pgn.substr(i, 7) == "1/2-1/2") {
+            return ResultType::Draw;
+        }
         return std::nullopt;
     };
 
+    VLOG(2) << "parsing moves, i=" << i << ", pgn.size()=" << pgn.size();
     while (i < pgn.size()) {
+        VLOG(4) << "at i=" << i;
         i = skip_to_legit_char(i, pgn);
+        VLOG(4) << "next few chars: " << pgn.substr(i, 7);
         if (i >= pgn.size()) {
+            VLOG(2) << "ran out of chars, i=" << i;
+            break;
+        }
+        result = parse_potential_result(i, pgn);
+        if (result.has_value()) {
             break;
         }
         if (!std::isdigit(pgn.at(i))) {
+            VLOG(2) << "couldnt find digit for move number";
             return std::nullopt;
         }
         std::size_t move_num = 0;
@@ -251,40 +320,60 @@ std::optional<std::vector<Game::MoveWithContext>> parseMoves(std::string const& 
             move_num = move_num*10 + pgn.at(i) - '0';
             i++;
         }
+        if (pgn.at(i) != '.') {
+            VLOG(2) << "didnt get dot after move number";
+            return std::nullopt;
+        }
+        i++;
+
+        VLOG(2) << "parsing move number " << move_num;
         std::size_t i_prev = i;
         i = skip_to_legit_char(i, pgn);
         if (i == i_prev) {
+            VLOG(2) << "expected some space between move number and move";
             return std::nullopt;
         }
         if (i >= pgn.size()) {
-            break;
+            VLOG(2) << "ran out of pgn text";
+            return std::nullopt;
         }
+
         std::optional<std::pair<std::size_t, Game::MoveWithContext>> res = parse_move(i, pgn, Color::White);
         if (!res.has_value()) {
+            VLOG(2) << "failed to parse whites move successfully";
             return std::nullopt;
         }
         i = res.value().first;
         moves.push_back(res.value().second);
 
         if(i<pgn.size() && std::isalnum(pgn.at(i))) {
+            VLOG(2) << "expected space between black and whites moves";
             return std::nullopt;
         }
 
         i = skip_to_legit_char(i, pgn);
         if (i >= pgn.size()) {
+            VLOG(2) << "ran out of pgn text";
             break;
         }
+        result = parse_potential_result(i, pgn);
+        if (result.has_value()) {
+            break;
+        }
+
         res = parse_move(i, pgn, Color::Black);
         if (!res.has_value()) {
+            VLOG(2) << "failed to parse blacks move successfully";
             return std::nullopt;
         }
         i = res.value().first;
         moves.push_back(res.value().second);
         if(i<pgn.size() && std::isalnum(pgn.at(i))) {
+            VLOG(2) << "expected space after blacks move but got: " << pgn.at(i);
             return std::nullopt;
         }
     }
-    return std::make_optional(moves);
+    return std::make_optional(std::make_pair(moves, result));
 }
 
 }
@@ -301,14 +390,16 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
     }
 
     std::size_t i = roster.value().second;
-    auto moves_optional = parseMoves(pgn, i);
+    VLOG(2) << "calling parseMoves from i = " << i;
+    auto moves_optional = parseMovesAndResult(pgn, i);
     if (!moves_optional.has_value()) {
         return std::nullopt;
     }
 
     Game game {};
     game.roster_ = roster.value().first;
-    game.moves_ = moves_optional.value();
+    game.moves_ = moves_optional.value().first;
+    game.result_ = moves_optional.value().second;
     return game;
 }
 
@@ -320,15 +411,19 @@ Game::SevenTagRoster const& Game::sevenTagRoster() const {
     return roster_;
 }
 
+std::optional<ResultType> Game::result() const {
+    return result_;
+}
+
 std::optional<Game::MoveWithContext> Game::moveAt(std::size_t moveNum, Color color) const {
-    (void) color;
-    (void) moveNum;
-    return std::nullopt;
+    return moveAt((moveNum-1)*2 + (color == Color::Black ? 2:1));
 }
 
 std::optional<Game::MoveWithContext> Game::moveAt(std::size_t halfMoveNum) const {
-    (void) halfMoveNum;
-    return std::nullopt;
+    if (halfMoveNum-1 >= moves_.size()) {
+        return std::nullopt;
+    }
+    return moves_.at(halfMoveNum-1);
 }
 
 Game::MoveWithContext::MoveWithContext(

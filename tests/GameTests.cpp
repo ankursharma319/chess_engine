@@ -63,13 +63,17 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_EQ("Fischer, Robert J.", game.sevenTagRoster().white);
     ASSERT_EQ("Spassky, Boris V.", game.sevenTagRoster().black);
     ASSERT_EQ(ResultType::Draw, game.sevenTagRoster().result.value());
+    VLOG(2) << "Tests for seven tag roster passing";
 
+    ASSERT_EQ(ResultType::Draw, game.result().value());
 
-    ASSERT_EQ(game.moveAt(1).value(), game.moveAt(1, Color::White));
-    ASSERT_EQ(game.moveAt(2).value(), game.moveAt(1, Color::Black));
+    VLOG(2) << "Starting tests to make sure both moveAt funcs are consistent";
+    ASSERT_EQ(game.moveAt(1).value(), game.moveAt(1, Color::White)) << "moveAt 1";
+    ASSERT_EQ(game.moveAt(2).value(), game.moveAt(1, Color::Black)) << "moveAt 2";
     ASSERT_EQ(game.moveAt(5).value(), game.moveAt(3, Color::White));
     ASSERT_EQ(game.moveAt(10).value(), game.moveAt(5, Color::Black));
 
+    VLOG(2) << "Starting tests for move #1";
     ASSERT_EQ(Move({white_pawn, {4,1}, {4, 3}}), game.moveAt(1).value().move);
     ASSERT_EQ(white_pawn, game.moveAt(1).value().piece);
     ASSERT_FALSE(game.moveAt(1).value().isCheck);
@@ -79,6 +83,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(1).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(1).value().isCastle.has_value());
 
+    VLOG(2) << "Starting tests for move #2";
     ASSERT_EQ(Move({black_pawn, {4,6}, {4, 4}}), game.moveAt(2).value().move);
     ASSERT_EQ(black_pawn, game.moveAt(2).value().piece);
     ASSERT_FALSE(game.moveAt(2).value().isCheck);
@@ -88,6 +93,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(2).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(2).value().isCastle.has_value());
 
+    VLOG(2) << "Starting tests for move #9";
     ASSERT_EQ(Move({white_king, {4,0}, {6, 0}}), game.moveAt(9).value().move);
     ASSERT_EQ(white_king, game.moveAt(9).value().piece);
     ASSERT_FALSE(game.moveAt(9).value().isCheck);
@@ -171,6 +177,8 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_FALSE(game.moveAt(101).value().isSrcFileAmbigious);
     ASSERT_FALSE(game.moveAt(101).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(101).value().isCastle.has_value());
+
+    ASSERT_EQ(ResultType::WhiteWin, game.result().value());
 }
 
 TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
@@ -189,23 +197,47 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_FALSE(game.moveAt(45).value().isCheckmate);
     ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
     ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(45).value().isCastle.has_value());
 }
 
-TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_both) {
+TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_checkmate_capture_together) {
     std::string const pgn = R"raw(
+1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5 11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6 21. Qf8 Kf6 22. Qa8 c4 23. Rfe1 Kg7 24. Qxa7 Kf6 25. Qc5 Kg7 26. Qxb5 Kf6 27. Qxc4 Kg7 28. a4 Kf6 29. a5 Kg7 30. a6 Kf6 31. a7 Kg7 32. b4 Kf6 33. b5 Kg7 34. b6 Kf6 35. Qb3 Kg7 36. c4 Kf6 37. b7 Kg7 38. c5 Kf6 39. Re6+ fxe6 40. Re1 Ke7 41. b8=Q Kf6 42. a8=Q Ke7 43. c6 Kf6 44. c7 Ke7 45. c8=Q Kf6 46. Q8g3 Ke7 47. Qca6 Kd7 48. Qh8 Ke7 49. Qh6 Kd7 50. Qab5+ Ke7 51. Qbc3 Kf7 52. Rf1 Ke7 53. Qge3 Kf7 54. Qb8 Ke7 55. Qbc8 Kf7 56. Qhh8 Ke7 57. h3 e5 58. Qa8 Ke6 59. Qab8 Kf5 60. Qbc7 Ke6 61. Qhg7 Kf5 62. Qc3xe5#
     )raw";
-
-    ASSERT_TRUE(false); // todo
 
     std::optional<Game> game_opt = Game::fromPgn(pgn);
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move(white_knight, {0,2}, {2, 3}), game.moveAt(45).value().move);
-    ASSERT_EQ(white_knight, game.moveAt(45).value().piece);
-    ASSERT_FALSE(game.moveAt(45).value().isCheck);
-    ASSERT_FALSE(game.moveAt(45).value().isCapture);
-    ASSERT_FALSE(game.moveAt(45).value().isCheckmate);
-    ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
-    ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
+    ASSERT_EQ(Move(white_queen, {2,2}, {4, 4}), game.moveAt(123).value().move);
+    ASSERT_EQ(white_queen, game.moveAt(123).value().piece);
+    ASSERT_FALSE(game.moveAt(123).value().isCheck);
+    ASSERT_TRUE(game.moveAt(123).value().isCapture);
+    ASSERT_TRUE(game.moveAt(123).value().isCheckmate);
+    ASSERT_TRUE(game.moveAt(123).value().isSrcFileAmbigious);
+    ASSERT_TRUE(game.moveAt(123).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(123).value().isCastle.has_value());
+
+    ASSERT_EQ(ResultType::WhiteWin, game.result().value());
+}
+
+TEST_F(GameTestFixture, parsing_pgn_with_castle) {
+    std::string const pgn = R"raw(
+1. d4 d5 2. Nf3 e5 3. Bg5 Nf6 4. c4 dxc4 5. Nc3 Ne4 6. Qa4+ Bd7 7. h3 Nxc3 8. e3 Nd1 9. Bxc4 Nc3 10. g4 Nd5 11. O-O-O
+    )raw";
+
+    std::optional<Game> game_opt = Game::fromPgn(pgn);
+    ASSERT_TRUE(game_opt.has_value());
+    Game game = game_opt.value();
+
+    ASSERT_EQ(Move(white_king, {4,0}, {2, 0}), game.moveAt(21).value().move);
+    ASSERT_EQ(white_king, game.moveAt(21).value().piece);
+    ASSERT_FALSE(game.moveAt(21).value().isCheck);
+    ASSERT_FALSE(game.moveAt(21).value().isCapture);
+    ASSERT_FALSE(game.moveAt(21).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(21).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.moveAt(21).value().isSrcRankAmbigious);
+    ASSERT_TRUE(game.moveAt(21).value().isCastle.has_value());
+    ASSERT_EQ(Side::QueenSide, game.moveAt(21).value().isCastle.value());
+    ASSERT_FALSE(game.result().has_value());
 }

@@ -61,6 +61,7 @@ public:
 
     std::string toPgn() const;
     SevenTagRoster const& sevenTagRoster() const;
+    std::optional<ResultType> result() const;
 
     std::optional<MoveWithContext> moveAt(std::size_t moveNum, Color color) const;
     std::optional<MoveWithContext> moveAt(std::size_t halfMoveNum) const;
@@ -68,6 +69,7 @@ public:
 private:
     SevenTagRoster roster_;
     std::vector<MoveWithContext> moves_;
+    std::optional<ResultType> result_;
 };
 
 }

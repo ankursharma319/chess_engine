@@ -12,7 +12,7 @@ GTEST_API_ int main(int argc, char **argv) {
     FLAGS_stderrthreshold = 2; // also log to stderr, if only logging to file
     FLAGS_logtostderr = true; // instead of file
     FLAGS_minloglevel = 0; // lower is more logging
-    FLAGS_v = 4; // applies to VLOG, higher is more logging
+    FLAGS_v = 0; // applies to VLOG, higher is more logging
     google::InitGoogleLogging(argv[0]);
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
