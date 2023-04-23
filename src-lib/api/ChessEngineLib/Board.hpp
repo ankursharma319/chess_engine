@@ -16,6 +16,7 @@ enum Side {
 class Board {
 public:
     static std::optional<Board> fromFen(std::string const& fen);
+    static Board startingPosBoard();
     ~Board() = default;
 
     using Board2dArray = std::array<std::array<std::optional<Piece>, 8>, 8>;

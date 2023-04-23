@@ -235,7 +235,7 @@ bool is_rook_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
         (col != move.toSquare.col) || (row != move.toSquare.row);
         col += direction_col, row += direction_row
     ) {
-        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
+        VLOG(5) << "checking contents at (" << +col << ", " << +row << ")";
         assert(col < 8);
         assert(row < 8);
         if (board.grid().at(col).at(row).has_value()) {
@@ -262,7 +262,7 @@ bool is_queen_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineL
         (col != move.toSquare.col) || (row != move.toSquare.row);
         col += direction_col, row += direction_row
     ) {
-        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
+        VLOG(5) << "checking contents at (" << +col << ", " << +row << ")";
         assert(col < 8);
         assert(row < 8);
         if (board.grid().at(col).at(row).has_value()) {
@@ -289,7 +289,7 @@ bool is_bishop_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngine
     ) {
         assert(col < 8);
         assert(row < 8);
-        VLOG(5) << "checking contents at (" << col << ", " << row << ")";
+        VLOG(5) << "checking contents at (" << +col << ", " << +row << ")";
         if (board.grid().at(col).at(row).has_value()) {
             VLOG(3) << "illegal move because there is a piece in the way at (" << col << ", " << row << ")";
             return false;
@@ -546,6 +546,20 @@ std::unordered_set<Move> getAllLegalMoves(Board const& board) {
         }
     }
     return legal_moves;
+}
+
+bool isMoveLegal(Board const& board, Move const& move) {
+    VLOG(1) << "asked to make move " << move;
+    if(!isMovePseudoLegal(board, move)) {
+        return false;
+    }
+    Board board_copy = board;
+    board_copy.forceMakeMove(move);
+    if (isKingCapturePossibleNextMove(board_copy)) {
+        VLOG(2) << "illegal move because king would die immediately";
+        return false;
+    }
+    return true;
 }
 
 }

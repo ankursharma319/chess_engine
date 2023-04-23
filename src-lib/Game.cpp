@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cctype>
 #include <optional>
+#include <stdexcept>
 
 namespace {
 
@@ -125,7 +126,101 @@ Piece::Type from_pgn_to_piece_type(char c) {
     }
 }
 
-std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<ResultType>>> parseMovesAndResult(std::string const& pgn, std::size_t i) {
+std::optional<Square> find_src_square(
+    Board const& board, Piece const& piece, Square to,
+    std::optional<Piece::Type> const& promotionTo
+) {
+    for (std::uint8_t col=0; col < 8; col++) {
+        for (std::uint8_t row=0; row < 8; row++) {
+            if (
+                auto const& opt = board.at(Square {col, row});
+                opt.has_value() && opt.value() == piece
+            ) {
+                Move mv = {piece, {col, row}, to, promotionTo};
+                if (isMoveLegal(board, std::move(mv))) {
+                    return Square {col, row};
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::uint8_t> find_src_row(
+    Board const& board, Piece const& piece, Square to, std::uint8_t from_col,
+    std::optional<Piece::Type> const& promotionTo
+) {
+    VLOG(7) << "finding src row for " << piece << " to " << to;
+    for (std::uint8_t row=0; row < 8; row++) {
+        if (
+            auto const& opt = board.at(Square {from_col, row});
+            opt.has_value() && opt.value() == piece
+        ) {
+            Move mv = {piece, {from_col, row}, to, promotionTo};
+            if (isMoveLegal(board, std::move(mv))) {
+                return row;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::uint8_t> find_src_col(
+    Board const& board, Piece const& piece, Square to, std::uint8_t from_row,
+    std::optional<Piece::Type> const& promotionTo
+) {
+    VLOG(7) << "finding src column for " << piece << " to " << to;
+    for (std::uint8_t col=0; col < 8; col++) {
+        if (
+            auto const& opt = board.at(Square {col, from_row});
+            opt.has_value() && opt.value() == piece
+        ) {
+            Move mv = {piece, {col, from_row}, to, promotionTo};
+            if (isMoveLegal(board, std::move(mv))) {
+                return col;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+bool set_src_square(
+    Board const& board, Piece const& piece, Square to, Square& from,
+    bool srcRowAlreadyKnown, bool srcColAlreadyKnown,
+    std::optional<Piece::Type> const& promotionTo
+) {
+
+    VLOG(6) << "setting src square for piece " << piece << " to " << to;
+    if (srcRowAlreadyKnown && srcColAlreadyKnown) {
+        return true;
+    }
+    if (!srcRowAlreadyKnown && !srcColAlreadyKnown) {
+        std::optional<Square> src = find_src_square(board, piece, to, promotionTo);
+        if (src.has_value()) {
+            from = src.value();
+        }
+        return src.has_value();
+    }
+    if (!srcRowAlreadyKnown) {
+        std::optional<std::uint8_t> src_rank = find_src_row(board, piece, to, from.col, promotionTo);
+        if (src_rank.has_value()) {
+            from.row = src_rank.value();
+        }
+        return src_rank.has_value();
+    }
+    if (!srcColAlreadyKnown) {
+        std::optional<std::uint8_t> src_file = find_src_col(board, piece, to, from.row, promotionTo);
+        if (src_file.has_value()) {
+            from.col = src_file.value();
+        }
+        return src_file.has_value();
+    }
+    throw std::runtime_error("Should not reach this part of the code");
+}
+
+std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<ResultType>>> parseMovesAndResult(
+    std::string const& pgn, std::size_t i, Board& board
+) {
     std::vector<Game::MoveWithContext> moves {};
     std::optional<ResultType> result {};
 
@@ -178,7 +273,9 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         return i;
     };
 
-    auto parse_move = [] (std::size_t i, std::string const& pgn, Color color) -> std::optional<std::pair<std::size_t, Game::MoveWithContext>> {
+    auto parse_move = [] (
+        std::size_t i, std::string const& pgn, Color color, Board& board
+    ) -> std::optional<std::pair<std::size_t, Game::MoveWithContext>> {
         Square from {0,0};
         Square to {0,0};
         Piece::Type type = Piece::Type::Pawn;
@@ -213,12 +310,12 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             j--;
         }
 
-        if (chunk.substr(0,j+1) == "O-O" || chunk.substr(0, j+1) == "0-0-0") {
+        if (chunk.substr(0,j+1) == "O-O" || chunk.substr(0, j+1) == "O-O-O") {
             type = Piece::Type::King;
             from.col = 4;
             from.row = color == Color::White ? 0 : 7;
             to.row = from.row;
-            if (chunk.substr(0, j+1) == "0-0-0") {
+            if (chunk.substr(0, j+1) == "O-O-O") {
                 to.col = 2;
                 isCastle = std::make_optional(Side::QueenSide);
             } else {
@@ -228,7 +325,24 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             Piece piece {type, color};
             Move move {piece, from, to, promotionTo};
             Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
+            bool is_valid = makeMove(board, move);
+            if (!is_valid) {
+                VLOG(3) << "castling determined to be illegal";
+                return std::nullopt;
+            }
             return std::pair(i, mv);
+        }
+
+        c = chunk.at(j);
+        if ((c == 'Q') || (c == 'N') || (c == 'R') || (c == 'B')) {
+            VLOG(7) << "parsing promotion piece from char " << c;
+            promotionTo = std::make_optional(from_pgn_to_piece_type(c));
+            j--;
+            if (chunk.at(j) != '=') {
+                VLOG(3) << "expected equals symbol to signal promotion, return nullopt";
+                return std::nullopt;
+            }
+            j--;
         }
 
         c = chunk.at(j);
@@ -265,8 +379,8 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             j--;
         }
         if (j < chunk.size() && std::isalpha(chunk.at(j))) {
-            VLOG(7) << "parsing type";
-            type = from_pgn_to_piece_type(pgn.at(j));
+            VLOG(7) << "parsing type from char from chunk=" << chunk << " at j=" << j << " which is " << chunk.at(j);
+            type = from_pgn_to_piece_type(chunk.at(j));
             j--;
         }
 
@@ -276,8 +390,17 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         }
 
         Piece piece {type, color};
+        if (!set_src_square(board, piece, to, from, isSrcRankAmbigious, isSrcFileAmbigious, promotionTo)) {
+            VLOG(3) << "Couldnt infer the source square for move";
+            return std::nullopt;
+        }
         Move move {piece, from, to, promotionTo};
         Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
+        bool is_valid = makeMove(board, move);
+        if (!is_valid) {
+            VLOG(3) << "move determined to be illegal" << std::endl;
+            return std::nullopt;
+        }
         return std::pair(i, mv);
     };
 
@@ -338,7 +461,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             return std::nullopt;
         }
 
-        std::optional<std::pair<std::size_t, Game::MoveWithContext>> res = parse_move(i, pgn, Color::White);
+        std::optional<std::pair<std::size_t, Game::MoveWithContext>> res = parse_move(i, pgn, Color::White, board);
         if (!res.has_value()) {
             VLOG(2) << "failed to parse whites move successfully";
             return std::nullopt;
@@ -361,7 +484,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             break;
         }
 
-        res = parse_move(i, pgn, Color::Black);
+        res = parse_move(i, pgn, Color::Black, board);
         if (!res.has_value()) {
             VLOG(2) << "failed to parse blacks move successfully";
             return std::nullopt;
@@ -371,6 +494,13 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         if(i<pgn.size() && std::isalnum(pgn.at(i))) {
             VLOG(2) << "expected space after blacks move but got: " << pgn.at(i);
             return std::nullopt;
+        }
+    }
+    if (!moves.empty() && moves.back().isCheckmate) {
+        if (moves.back().move.piece.color == Color::White) {
+            result = ResultType::WhiteWin;
+        } else {
+            result = ResultType::BlackWin;
         }
     }
     return std::make_optional(std::make_pair(moves, result));
@@ -391,7 +521,8 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
 
     std::size_t i = roster.value().second;
     VLOG(2) << "calling parseMoves from i = " << i;
-    auto moves_optional = parseMovesAndResult(pgn, i);
+    Board board = Board::startingPosBoard();
+    auto moves_optional = parseMovesAndResult(pgn, i, board);
     if (!moves_optional.has_value()) {
         return std::nullopt;
     }

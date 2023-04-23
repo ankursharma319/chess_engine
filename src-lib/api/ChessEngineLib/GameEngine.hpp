@@ -18,6 +18,7 @@ std::unordered_set<Move> getAllLegalMoves(Board const& board);
 
 bool makeMove(Board& board, Move const& move);
 bool isMovePseudoLegal(Board const& board, Move const& move);
+bool isMoveLegal(Board const& board, Move const& move);
 
 enum class ResultType {
     Draw, WhiteWin, BlackWin

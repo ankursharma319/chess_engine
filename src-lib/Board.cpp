@@ -193,6 +193,10 @@ void write_en_passant_fen_chunk(std::ostream& os, std::optional<ChessEngineLib::
 
 namespace ChessEngineLib {
 
+Board Board::startingPosBoard() {
+    return fromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").value();
+}
+
 std::optional<Board> Board::fromFen(std::string const& fen) {
     VLOG(2) << "fen = " << fen;
     std::vector<std::string> chunks = split_string(fen, " ");

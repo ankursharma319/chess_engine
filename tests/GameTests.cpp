@@ -153,7 +153,12 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
 [Termination "Normal"]
 [Annotator "lichess.org"]
 
-1. d4 Nf6 2. c4 d6 3. Nf3 g6 4. Nc3 Bg7 5. Bg5 { E61 King's Indian Defense: Smyslov Variation } h6 6. Bh4 g5 7. Bg3 Nh5 8. e3 c5 9. d5 Bxc3+ 10. bxc3 Kd7 11. Ne5+ dxe5 12. Bxe5 Qa5 13. Bxh8 f6 14. Rc1 Qd8 15. Qxh5 Qxh8 16. Be2 Kc7 17. h4 Qg7 18. hxg5 hxg5 19. Qh7 Qxh7 20. Rxh7 Kd6 21. Rh8 Nd7 22. Bg4 b6 23. Kd2 Rb8 24. a4 Ba6 25. Rxb8 Nxb8 26. Kd3 e5 27. Rh1 e4+ 28. Kxe4 Bxc4 29. Be6 Bb3 30. Kf5 Bxa4 31. Kxf6 Bc2 32. Rh7 Bxh7 33. f3 a5 34. e4 Nd7+ 35. Bxd7 Kxd7 36. e5 Bg8 37. e6+ Kd6 38. e7 Kd7 39. d6 a4 40. Kg7 Bh7 41. Kf7 Bg6+ 42. Kxg6 a3 43. Kf7 a2 44. e8=Q+ Kxd6 45. Qe6+ Kc7 46. Qxa2 Kc6 47. Qe6+ Kb5 48. Qd5 Ka5 49. Qc4 b5 50. Qxc5 Ka4 51. Qb4# { White wins by checkmate. } 1-0
+1. d4 Nf6 2. c4 d6 3. Nf3 g6 4. Nc3 Bg7 5. Bg5 { E61 King's Indian Defense: Smyslov Variation } h6 6. Bh4 g5 7. Bg3 Nh5
+8. e3 c5 9. d5 Bxc3+ 10. bxc3 Kd7 11. Ne5+ dxe5 12. Bxe5 Qa5 13. Bxh8 f6 14. Rc1 Qd8 15. Qxh5 Qxh8 16. Be2 Kc7 17. h4 Qg7
+18. hxg5 hxg5 19. Qh7 Qxh7 20. Rxh7 Kd6 21. Rh8 Nd7 22. Bg4 b6 23. Kd2 Rb8 24. a4 Ba6 25. Rxb8 Nxb8 26. Kd3 e5
+27. Rh1 e4+ 28. Kxe4 Bxc4 29. Be6 Bb3 30. Kf5 Bxa4 31. Kxf6 Bc2 32. Rh7 Bxh7 33. f3 a5 34. e4 Nd7+ 35. Bxd7 Kxd7
+36. e5 Bg8 37. e6+ Kd6 38. e7 Kd7 39. d6 a4 40. Kg7 Bh7 41. Kf7 Bg6+ 42. Kxg6 a3 43. Kf7 a2 44. e8=Q+ Kxd6
+45. Qe6+ Kc7 46. Qxa2 Kc6 47. Qe6+ Kb5 48. Qd5 Ka5 49. Qc4 b5 50. Qxc5 Ka4 51. Qb4# { White wins by checkmate. } 1-0
     )raw";
 
     std::optional<Game> game_opt = Game::fromPgn(pgn);
@@ -171,7 +176,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
 
     ASSERT_EQ(Move({white_queen, {2,4}, {1, 3}}), game.moveAt(101).value().move);
     ASSERT_EQ(white_queen, game.moveAt(101).value().piece);
-    ASSERT_TRUE(game.moveAt(101).value().isCheck);
+    ASSERT_FALSE(game.moveAt(101).value().isCheck);
     ASSERT_FALSE(game.moveAt(101).value().isCapture);
     ASSERT_TRUE(game.moveAt(101).value().isCheckmate);
     ASSERT_FALSE(game.moveAt(101).value().isSrcFileAmbigious);
@@ -209,6 +214,8 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_check
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
+    VLOG(2) << "Making assertions about the last move";
+    ASSERT_TRUE(game.moveAt(123).has_value());
     ASSERT_EQ(Move(white_queen, {2,2}, {4, 4}), game.moveAt(123).value().move);
     ASSERT_EQ(white_queen, game.moveAt(123).value().piece);
     ASSERT_FALSE(game.moveAt(123).value().isCheck);
@@ -218,6 +225,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_check
     ASSERT_TRUE(game.moveAt(123).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(123).value().isCastle.has_value());
 
+    VLOG(2) << "Making assertion about the result";
     ASSERT_EQ(ResultType::WhiteWin, game.result().value());
 }
 
