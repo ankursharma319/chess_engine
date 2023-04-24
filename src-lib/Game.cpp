@@ -597,6 +597,38 @@ std::string to_pgn_string(std::vector<Game::MoveWithContext> const& moves) {
     }
     return result;
 }
+
+std::optional<Game::MoveWithContext> create_move_with_context_and_make_move(Board& board, Move const& move) {
+    Board board_copy = board;
+    bool success = makeMove(board_copy, move);
+    if (!success) {
+        return std::nullopt;
+    }
+    bool isCapture = board.at(move.toSquare).has_value();
+    bool isCheck = false;
+    auto result_opt = isGameOver(board_copy);
+    bool isCheckmate = result_opt.has_value() && result_opt.value() != ResultType::Draw;
+    bool isSrcFileAmbigious = false;
+    bool isSrcRankAmbigious = false;
+    std::optional<Side> isCastle = std::nullopt;
+    Piece piece = board.at(move.fromSquare).value();
+    if (isCapture && piece.type == Piece::Type::Pawn) {
+        isSrcFileAmbigious = true;
+    }
+    if (piece.type == Piece::Type::King && (std::abs(move.fromSquare.col - move.toSquare.col) >= 2)) {
+        if (move.toSquare.col == 2) {
+            isCastle = Side::QueenSide;
+        } else {
+            assert(move.toSquare.col == 6);
+            isCastle = Side::KingSide;
+        }
+    }
+
+    Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
+    board = board_copy;
+    return mv;
+}
+
 }
 
 namespace ChessEngineLib {
@@ -633,12 +665,15 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
     return game;
 }
 
-std::string Game::toPgn() const {
-    std::string sevenTagRosterStr = to_pgn_string(roster_);
+std::string Game::toPgn(bool with_roster) const {
     std::string movesPgnStr = to_pgn_string(moves_);
     if (result_.has_value()) {
         movesPgnStr += " " + to_pgn_string(result_);
     }
+    if (!with_roster) {
+        return movesPgnStr + "\n";
+    }
+    std::string sevenTagRosterStr = to_pgn_string(roster_);
     return sevenTagRosterStr + "\n" + movesPgnStr + "\n";
 }
 
@@ -667,6 +702,15 @@ std::optional<Game::MoveWithContext> Game::moveAt(std::size_t halfMoveNum) const
 
 Board const& Game::board() const {
     return board_;
+}
+
+bool Game::makeMove(Move const& move) {
+    std::optional<MoveWithContext> mv = create_move_with_context_and_make_move(board_, move);
+    if (!mv.has_value()) {
+        return false;
+    }
+    moves_.push_back(mv.value());
+    return true;
 }
 
 Game::MoveWithContext::MoveWithContext(

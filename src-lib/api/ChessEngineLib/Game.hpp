@@ -60,7 +60,7 @@ public:
         }
     };
 
-    std::string toPgn() const;
+    std::string toPgn(bool with_roster = true) const;
     SevenTagRoster const& sevenTagRoster() const;
     std::optional<ResultType> result() const;
 
@@ -68,6 +68,8 @@ public:
     std::optional<MoveWithContext> moveAt(std::size_t halfMoveNum) const;
     std::size_t movesSize() const;
     Board const& board() const;
+
+    bool makeMove(Move const& move);
 
 private:
     SevenTagRoster roster_;

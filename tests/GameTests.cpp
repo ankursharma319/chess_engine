@@ -340,5 +340,372 @@ TEST_F(GameTestFixture, parsing_pgn_with_castle) {
 }
 
 TEST_F(GameTestFixture, typical_game_flow) {
+    Game game {};
+    ASSERT_FALSE(game.makeMove(Move({3,1}, {3,4})));
+    ASSERT_EQ(0, game.movesSize());
+    ASSERT_TRUE(game.makeMove(Move({3,1}, {3,3})));
+    ASSERT_EQ(1, game.movesSize());
+    ASSERT_FALSE(game.makeMove(Move({3,1}, {3,3})));
+    ASSERT_EQ(1, game.movesSize());
+
+    ASSERT_TRUE(game.moveAt(1).has_value());
+    ASSERT_EQ(Move({3,1}, {3,3}), game.moveAt(1).value().move);
+    ASSERT_EQ(white_pawn, game.moveAt(1).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(1).value().isCastle);
+    ASSERT_FALSE(game.moveAt(1).value().isCheck);
+    ASSERT_FALSE(game.moveAt(1).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(1).value().isCapture);
+    ASSERT_FALSE(game.moveAt(1).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(1).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1", game.board().fen());
+    ASSERT_EQ("1. d4\n", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {4,4})));
+    ASSERT_EQ(2, game.movesSize());
+    ASSERT_TRUE(game.moveAt(2).has_value());
+    ASSERT_EQ(Move({4,6}, {4,4}), game.moveAt(2).value().move);
+    ASSERT_EQ(black_pawn, game.moveAt(2).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(2).value().isCastle);
+    ASSERT_FALSE(game.moveAt(2).value().isCheck);
+    ASSERT_FALSE(game.moveAt(2).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(2).value().isCapture);
+    ASSERT_FALSE(game.moveAt(2).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(2).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 2", game.board().fen());
+    ASSERT_EQ("1. d4 e5\n", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({3,3}, {4,4})));
+    ASSERT_EQ(3, game.movesSize());
+    ASSERT_TRUE(game.moveAt(3).has_value());
+    ASSERT_EQ(Move({3,3}, {4,4}), game.moveAt(3).value().move);
+    ASSERT_EQ(white_pawn, game.moveAt(3).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(3).value().isCastle);
+    ASSERT_FALSE(game.moveAt(3).value().isCheck);
+    ASSERT_FALSE(game.moveAt(3).value().isCheckmate);
+    ASSERT_TRUE(game.moveAt(3).value().isCapture);
+    ASSERT_FALSE(game.moveAt(3).value().isSrcRankAmbigious);
+    ASSERT_TRUE(game.moveAt(3).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("rnbqkbnr/pppp1ppp/8/4P3/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 2", game.board().fen());
+    ASSERT_EQ("1. d4 e5 2. dxe5\n", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({3,6}, {3,5})));
+    ASSERT_TRUE(game.makeMove(Move({2,0}, {5,3})));
+    ASSERT_TRUE(game.makeMove(Move({6,7}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({4,4}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({3,7}, {5,5})));
+    ASSERT_EQ(8, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({6,0}, {5,2})));
+    ASSERT_TRUE(game.makeMove(Move({2,7}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({4,1}, {4,3})));
+    ASSERT_TRUE(game.makeMove(Move({5,7}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,0}, {2,2})));
+    ASSERT_TRUE(game.makeMove(Move({1,7}, {3,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,3}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {5,4})));
+    ASSERT_EQ(16, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({5,0}, {3,2})));
+    ASSERT_TRUE(game.makeMove(Move({3,6}, {4,4})));
+    ASSERT_TRUE(game.makeMove(Move({3,2}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({3,5}, {3,4})));
+    ASSERT_TRUE(game.makeMove(Move({5,2}, {4,4})));
+    ASSERT_TRUE(game.makeMove(Move({2,6}, {2,4})));
+    ASSERT_TRUE(game.makeMove(Move({2,2}, {3,4})));
+    ASSERT_TRUE(game.makeMove(Move({0,7}, {3,7})));
+    ASSERT_EQ(24, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({3,4}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,7}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,0}, {6,0})));
+
+    ASSERT_EQ(Move({4,0}, {6,0}), game.moveAt(27).value().move);
+    ASSERT_EQ(white_king, game.moveAt(27).value().piece);
+    ASSERT_EQ(std::make_optional(Side::KingSide), game.moveAt(27).value().isCastle);
+    ASSERT_FALSE(game.moveAt(27).value().isCheck);
+    ASSERT_FALSE(game.moveAt(27).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(27).value().isCapture);
+    ASSERT_FALSE(game.moveAt(27).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(27).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("3r3r/pp2kppp/8/2p1NB2/5B2/8/PPP2PPP/R2Q1RK1 b - - 1 14", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O
+)raw", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({1,6}, {1,4})));
+    ASSERT_TRUE(game.makeMove(Move({4,4}, {2,5})));
+
+    ASSERT_EQ(Move({4,4}, {2,5}), game.moveAt(29).value().move);
+    ASSERT_EQ(white_knight, game.moveAt(29).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(29).value().isCastle);
+    ASSERT_TRUE(game.moveAt(29).value().isCheck);
+    ASSERT_FALSE(game.moveAt(29).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(29).value().isCapture);
+    ASSERT_FALSE(game.moveAt(29).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(29).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("3r3r/p3kppp/2N5/1pp2B2/5B2/8/PPP2PPP/R2Q1RK1 b - - 1 15", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+
+)raw", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({2,5}, {3,7})));
+    ASSERT_TRUE(game.makeMove(Move({7,7}, {3,7})));
+    ASSERT_EQ(32, game.movesSize());
+
+    ASSERT_EQ(Move({7,7}, {3,7}), game.moveAt(32).value().move);
+    ASSERT_EQ(black_rook, game.moveAt(32).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(32).value().isCastle);
+    ASSERT_FALSE(game.moveAt(32).value().isCheck);
+    ASSERT_FALSE(game.moveAt(32).value().isCheckmate);
+    ASSERT_TRUE(game.moveAt(32).value().isCapture);
+    ASSERT_FALSE(game.moveAt(32).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(32).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("3r4/p4ppp/5k2/1pp2B2/5B2/8/PPP2PPP/R2Q1RK1 w - - 0 17", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8
+)raw", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({3,0}, {3,7})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({3,7}, {7,7})));
+    ASSERT_TRUE(game.makeMove(Move({5,4}, {5,3})));
+    ASSERT_TRUE(game.makeMove(Move({7,7}, {7,6})));
+    ASSERT_TRUE(game.makeMove(Move({5,3}, {4,4})));
+    ASSERT_TRUE(game.makeMove(Move({7,6}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,4}, {4,5})));
+    ASSERT_EQ(40, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,7})));
+    ASSERT_TRUE(game.makeMove(Move({4,5}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({5,7}, {0,7})));
+    ASSERT_TRUE(game.makeMove(Move({2,4}, {2,3})));
+    ASSERT_TRUE(game.makeMove(Move({5,0}, {4,0})));
+
+    ASSERT_EQ(Move({5, 0}, {4,0}), game.moveAt(45).value().move);
+    ASSERT_EQ(white_rook, game.moveAt(45).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(45).value().isCastle);
+    ASSERT_FALSE(game.moveAt(45).value().isCheck);
+    ASSERT_FALSE(game.moveAt(45).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(45).value().isCapture);
+    ASSERT_FALSE(game.moveAt(45).value().isSrcRankAmbigious);
+    ASSERT_TRUE(game.moveAt(45).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("Q7/p4p2/5k2/1p6/2p5/8/PPP2PPP/R3R1K1 b - - 1 23", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6
+21. Qf8 Kf6 22. Qa8 c4 23. Rfe1
+)raw", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({0,7}, {0,6})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_EQ(48, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({0,6}, {2,4})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({2,4}, {1,4})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({1,4}, {2,3})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({0,1}, {0,3})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_EQ(56, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({0,3}, {0,4})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({0,4}, {0,5})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({0,5}, {0,6})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,1}, {1,3})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_EQ(64, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({1,3}, {1,4})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,4}, {1,5})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({2,3}, {1,2})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({2,1}, {2,3})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_EQ(72, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({1,5}, {1,6})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({2,3}, {2,4})));
+    ASSERT_TRUE(game.makeMove(Move({6,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({4,0}, {4,5})));
+    ASSERT_TRUE(game.makeMove(Move({5,6}, {4,5})));
+    ASSERT_TRUE(game.makeMove(Move({0,0}, {4,0})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {4,6})));
+    ASSERT_EQ(80, game.movesSize());
+    ASSERT_EQ("8/PP2k3/4p3/2P5/8/1Q6/5PPP/4R1K1 w - - 2 41", game.board().fen());
+
+    ASSERT_TRUE(game.makeMove(Move({1,6}, {1,7}, Piece::Type::Queen)));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({0,6}, {0,7}, Piece::Type::Queen)));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({2,4}, {2,5})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({2,5}, {2,6})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {4,6})));
+    ASSERT_EQ(88, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({2,6}, {2,7}, Piece::Type::Queen)));
+
+    ASSERT_EQ(Move({2,6}, {2,7}, Piece::Type::Queen), game.moveAt(89).value().move);
+    ASSERT_EQ(white_pawn, game.moveAt(89).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(89).value().isCastle);
+    ASSERT_FALSE(game.moveAt(89).value().isCheck);
+    ASSERT_FALSE(game.moveAt(89).value().isCheckmate);
+    ASSERT_FALSE(game.moveAt(89).value().isCapture);
+    ASSERT_FALSE(game.moveAt(89).value().isSrcRankAmbigious);
+    ASSERT_FALSE(game.moveAt(89).value().isSrcFileAmbigious);
+    ASSERT_FALSE(game.result().has_value());
+    ASSERT_EQ("QQQ5/4k3/4p3/8/8/1Q6/5PPP/4R1K1 b - - 0 45", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6
+21. Qf8 Kf6 22. Qa8 c4 23. Rfe1 Kg7 24. Qxa7 Kf6 25. Qc5 Kg7 26. Qxb5 Kf6 27. Qxc4 Kg7 28. a4 Kf6 29. a5 Kg7 30. a6 Kf6
+31. a7 Kg7 32. b4 Kf6 33. b5 Kg7 34. b6 Kf6 35. Qb3 Kg7 36. c4 Kf6 37. b7 Kg7 38. c5 Kf6 39. Re6+ fxe6 40. Re1 Ke7
+41. b8=Q Kf6 42. a8=Q Ke7 43. c6 Kf6 44. c7 Ke7 45. c8=Q
+)raw", game.toPgn(false));
+
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,5})));
+    ASSERT_TRUE(game.makeMove(Move({1,7}, {6,2})));
+    ASSERT_TRUE(game.makeMove(Move({5,5}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({2,7}, {0,5})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {3,6})));
+    ASSERT_TRUE(game.makeMove(Move({0,7}, {7,7})));
+    ASSERT_TRUE(game.makeMove(Move({3,6}, {4,6})));
+    ASSERT_EQ(96, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({7,7}, {7,5})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {3,6})));
+    ASSERT_TRUE(game.makeMove(Move({0,5}, {1,4})));
+    ASSERT_TRUE(game.makeMove(Move({3,6}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,2}, {2,2})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,0}, {5,0})));
+    ASSERT_TRUE(game.makeMove(Move({5,6}, {4,6})));
+    ASSERT_EQ(104, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({6,2}, {4,2})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,4}, {1,7})));
+    ASSERT_TRUE(game.makeMove(Move({5,6}, {4,6})));
+    ASSERT_TRUE(game.makeMove(Move({1,7}, {2,7})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {5,6})));
+    ASSERT_TRUE(game.makeMove(Move({7,5}, {7,7})));
+    ASSERT_TRUE(game.makeMove(Move({5,6}, {4,6})));
+    ASSERT_EQ(112, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({7,1}, {7,2})));
+    ASSERT_TRUE(game.makeMove(Move({4,5}, {4,4})));
+    ASSERT_TRUE(game.makeMove(Move({2,7}, {0,7})));
+    ASSERT_TRUE(game.makeMove(Move({4,6}, {4,5})));
+    ASSERT_TRUE(game.makeMove(Move({0,7}, {1,7})));
+    ASSERT_TRUE(game.makeMove(Move({4,5}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({1,7}, {2,6})));
+    ASSERT_TRUE(game.makeMove(Move({5,4}, {4,5})));
+    ASSERT_EQ(120, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({7,7}, {6,6})));
+    ASSERT_TRUE(game.makeMove(Move({4,5}, {5,4})));
+    ASSERT_TRUE(game.makeMove(Move({2,2}, {4,4})));
+    ASSERT_EQ(123, game.movesSize());
+
+    ASSERT_EQ(Move({2,2}, {4,4}), game.moveAt(123).value().move);
+    ASSERT_EQ(white_queen, game.moveAt(123).value().piece);
+    ASSERT_EQ(std::nullopt, game.moveAt(123).value().isCastle);
+    ASSERT_FALSE(game.moveAt(123).value().isCheck);
+    ASSERT_TRUE(game.moveAt(123).value().isCheckmate);
+    ASSERT_TRUE(game.moveAt(123).value().isCapture);
+    ASSERT_TRUE(game.moveAt(123).value().isSrcRankAmbigious);
+    ASSERT_TRUE(game.moveAt(123).value().isSrcFileAmbigious);
+    ASSERT_TRUE(game.result().has_value());
+    ASSERT_EQ("8/2Q3Q1/8/4Qk2/8/4Q2P/5PP1/5RK1 b - - 0 62", game.board().fen());
+    ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6
+21. Qf8 Kf6 22. Qa8 c4 23. Rfe1 Kg7 24. Qxa7 Kf6 25. Qc5 Kg7 26. Qxb5 Kf6 27. Qxc4 Kg7 28. a4 Kf6 29. a5 Kg7 30. a6 Kf6
+31. a7 Kg7 32. b4 Kf6 33. b5 Kg7 34. b6 Kf6 35. Qb3 Kg7 36. c4 Kf6 37. b7 Kg7 38. c5 Kf6 39. Re6+ fxe6 40. Re1 Ke7
+41. b8=Q Kf6 42. a8=Q Ke7 43. c6 Kf6 44. c7 Ke7 45. c8=Q Kf6 46. Q8g3 Ke7 47. Qca6 Kd7 48. Qh8 Ke7 49. Qh6 Kd7 50. Qab5+ Ke7
+51. Qbc3 Kf7 52. Rf1 Ke7 53. Qge3 Kf7 54. Qb8 Ke7 55. Qbc8 Kf7 56. Qhh8 Ke7 57. h3 e5 58. Qa8 Ke6 59. Qab8 Kf5 60. Qbc7 Ke6
+61. Qhg7 Kf5 62. Qc3xe5# 1-0
+)raw", game.toPgn(false));
+
+    // game is already over so should not be able to make move
+    ASSERT_FALSE(game.makeMove(Move({5,4}, {6,5})));
 }
 
+TEST_F(GameTestFixture, game_is_aware_of_threefold_repetition) {
+    auto game_opt = Game::fromPgn(R"raw(
+1. e4 e5 2. Ke2 Ke7 3. Ke1 Ke8 4. Nf3 Nf6 5. Ng1 Ng8
+)raw");
+    Game game = game_opt.value();
+    ASSERT_EQ("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w - - 8 6", game.board().fen());
+    ASSERT_EQ(10, game.movesSize());
+
+    ASSERT_TRUE(game.makeMove(Move({5,0}, {2,3})));
+    ASSERT_TRUE(game.makeMove(Move({5,7}, {2,4})));
+    ASSERT_TRUE(game.makeMove(Move({2,3}, {5,0})));
+    ASSERT_EQ(std::nullopt, game.result());
+    ASSERT_TRUE(game.makeMove(Move({2,4}, {5,7})));
+
+    ASSERT_EQ(std::make_optional(ResultType::Draw), game.result());
+    ASSERT_EQ("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w - - 12 8", game.board().fen());
+    ASSERT_FALSE(game.makeMove(Move({0,1}, {0,2})));
+    ASSERT_FALSE(game.makeMove(Move({0,6}, {0,5})));
+    ASSERT_EQ(14, game.movesSize());
+}
+
+TEST_F(GameTestFixture, game_is_aware_of_fifty_move_rule) {
+    auto game_opt = Game::fromPgn(R"raw(
+[Event "Rated Bullet game"]
+[Site "https://lichess.org/WPURzP0g"]
+[Date "2023.04.19"]
+1. Nf3 Nf6 2. g3 d6 3. Bg2 g6 4. d3 Bg7 5. O-O O-O 6. e4 Bd7 7. Nc3 Qc8 8. Re1 Nc6 9. Bh1 e5 10. Be3 Nd4
+11. Nxd4 exd4 12. Bxd4 Re8 13. Bxf6 Bxf6 14. Nd5 Bg7 15. Rb1 c6 16. Ne3 a5 17. Qd2 Qc7 18. c3 b5 19. d4 a4 20. a3 h5
+21. Rbd1 Rac8 22. f4 Rcd8 23. e5 Bc8 24. Qf2 d5 25. Bf3 Qe7 26. Be2 Bh3 27. f5 Qg5 28. Bd3 Bh6 29. Ng2 Bxg2 30. Kxg2 c5
+31. dxc5 h4 32. Rf1 Rxe5 33. fxg6 f6 34. Qxf6 Qxf6 35. Rxf6 hxg3 36. hxg3 d4 37. cxd4 Rxd4 38. Bc2 Rxd1 39. Bxd1 Rxc5 40. Rf2 Rc1
+41. Be2 Rc5 42. Bf3 Kg7 43. Re2 Bg5 44. Be4 Bf6 45. Bf3 Rg5 46. b3 Be5 47. bxa4 bxa4 48. Kf2 Bxg3+ 49. Ke3 Bd6 50. Kd3 Bc5
+51. Bd5 Rxd5+ 52. Kc4 Rg5 53. Kb5 Bxa3+ 54. Kxa4 Bd6 55. Kb3 Be5 56. Kc4 Bf6 57. Kd3 Rg3+ 58. Ke4 Rg4+ 59. Kf3 Rg5 60. Ke3 Re5+
+61. Kd3 Rc5 62. Kd2 Rc3 63. Kd1 Rc7 64. Rc2 Re7 65. Kc1 Re1+ 66. Kd2 Re4 67. Kd3 Rb4 68. Rd2 Rb3+ 69. Ke2 Rb5 70. Kd1 Re5
+71. Rd3 Rg5 72. Rd2 Kxg6 73. Re2 Bd4 74. Kc2 Be3 75. Kd3 Bf4 76. Ke4 Re5+ 77. Kf3 Rf5 78. Ke4 Bg5 79. Kd3 Rd5+ 80. Kc2 Rb5
+81. Kd1 Rb6 82. Rf2 Rf6 83. Ke2 Re6+ 84. Kf1 Rc6 85. Rg2 Kh5 86. Rf2 Bf4 87. Ke2 Kg4 88. Kf1 Kf5 89. Re2 Rc1+ 90. Kf2 Rc3
+91. Rb2 Kg4 92. Rb3
+)raw");
+    Game game = game_opt.value();
+    ASSERT_EQ("8/8/8/8/5bk1/1Rr5/5K2/8 b - - 39 92", game.board().fen());
+    ASSERT_EQ(183, game.movesSize());
+    ASSERT_TRUE(game.makeMove(Move({2,2}, {2,0})));
+    ASSERT_TRUE(game.makeMove(Move({1,2}, {1,1})));
+    ASSERT_TRUE(game.makeMove(Move({2,0}, {2,7})));
+    ASSERT_TRUE(game.makeMove(Move({1,1}, {1,7})));
+    ASSERT_TRUE(game.makeMove(Move({2,7}, {2,1})));
+    ASSERT_TRUE(game.makeMove(Move({5,1}, {5,0})));
+    ASSERT_TRUE(game.makeMove(Move({2,1}, {2,2})));
+    ASSERT_TRUE(game.makeMove(Move({1,7}, {1,1})));
+    ASSERT_EQ(191, game.movesSize());
+    ASSERT_EQ("8/8/8/8/5bk1/2r5/1R6/5K2 b - - 47 96", game.board().fen());
+
+    ASSERT_TRUE(game.makeMove(Move({2,2}, {0,2})));
+    ASSERT_TRUE(game.makeMove(Move({1,1}, {0,1})));
+    ASSERT_EQ(193, game.movesSize());
+    ASSERT_EQ("8/8/8/8/5bk1/r7/R7/5K2 b - - 49 97", game.board().fen());
+    ASSERT_EQ(std::nullopt, game.result());
+
+    ASSERT_TRUE(game.makeMove(Move({0,2}, {0,6})));
+    ASSERT_EQ(194, game.movesSize());
+    ASSERT_EQ(std::make_optional(ResultType::Draw), game.result());
+    ASSERT_EQ("8/r7/8/8/5bk1/8/R7/5K2 w - - 50 98", game.board().fen());
+
+    ASSERT_FALSE(game.makeMove(Move({0,1}, {0,0})));
+}
