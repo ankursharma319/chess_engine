@@ -124,20 +124,18 @@ inline std::ostream & operator<<(std::ostream &os, Piece const& p) {
 
 struct Move {
     Move() = delete;
-    Move(Piece const& piece, Square from_square, Square to_square,
+    Move(Square from_square, Square to_square,
         std::optional<Piece::Type> const& promotion_to = std::nullopt
-    ): piece(piece), fromSquare(from_square), toSquare(to_square), promotionTo(promotion_to)
+    ): fromSquare(from_square), toSquare(to_square), promotionTo(promotion_to)
     {}
 
     bool operator==(Move const& other) const {
         return
-            (piece == other.piece) &&
             (fromSquare == other.fromSquare) &&
             (toSquare == other.toSquare) &&
             (promotionTo == other.promotionTo);
     }
 
-    Piece piece;
     Square fromSquare;
     Square toSquare;
     std::optional<Piece::Type> promotionTo {std::nullopt};
@@ -145,7 +143,7 @@ struct Move {
 
 
 inline std::ostream & operator<<(std::ostream &os, Move const& m) {
-    os << m.piece << " from " << m.fromSquare << " to " << m.toSquare;
+    os << "from " << m.fromSquare << " to " << m.toSquare;
     return os;
 }
 
@@ -181,11 +179,10 @@ struct std::hash<ChessEngineLib::Move>
     {
         std::size_t h1 = std::hash<ChessEngineLib::Square>{}(s.toSquare);
         std::size_t h2 = std::hash<ChessEngineLib::Square>{}(s.fromSquare);
-        std::size_t h3 = std::hash<ChessEngineLib::Piece>{}(s.piece);
-        std::size_t h4 = std::hash<ChessEngineLib::Piece::Type>{}(
+        std::size_t h3 = std::hash<ChessEngineLib::Piece::Type>{}(
             s.promotionTo.value_or(ChessEngineLib::Piece::Type::King)
         );
-        return h1 ^ ((h2 ^ ((h3 ^ (h4 << 1)) << 1)) << 1);
+        return h1 ^ ((h2 ^ (h3 << 1)) << 1);
     }
 };
 

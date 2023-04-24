@@ -371,41 +371,41 @@ void Board::expireCastlingAvailability(Color color, Side side) {
 
 // No validation done whether the move is legal or not
 void Board::forceMakeMove(Move const& move) {
-    assert(at(move.fromSquare) == std::make_optional(move.piece));
+    Piece piece = at(move.fromSquare).value();
     m_nextMoveColor = m_nextMoveColor == Color::Black ? Color::White : Color::Black;
     bool is_capture = at(move.toSquare).has_value();
-    bool is_pawn_move = move.piece.type == Piece::Type::Pawn;
+    bool is_pawn_move = piece.type == Piece::Type::Pawn;
     if (is_capture || is_pawn_move) {
         m_halfMoveClock = 0;
     } else {
         m_halfMoveClock ++;
     }
     if (is_capture) {
-        assert(at(move.toSquare).value().color != move.piece.color);
+        assert(at(move.toSquare).value().color != piece.color);
     }
-    if (move.piece.color == Color::Black) {
+    if (piece.color == Color::Black) {
         m_moveNumber ++;
     }
-    if (move.piece.type == Piece::Type::King) {
-        expireCastlingAvailability(move.piece.color, Side::KingSide);
-        expireCastlingAvailability(move.piece.color, Side::QueenSide);
+    if (piece.type == Piece::Type::King) {
+        expireCastlingAvailability(piece.color, Side::KingSide);
+        expireCastlingAvailability(piece.color, Side::QueenSide);
     }
-    if (move.piece.type == Piece::Type::Rook && move.piece.color == Color::White) {
+    if (piece.type == Piece::Type::Rook && piece.color == Color::White) {
         if (move.fromSquare == Square({0,0})) {
-            expireCastlingAvailability(move.piece.color, Side::QueenSide);
+            expireCastlingAvailability(piece.color, Side::QueenSide);
         } else if (move.fromSquare == Square({7,0})) {
-            expireCastlingAvailability(move.piece.color, Side::KingSide);
+            expireCastlingAvailability(piece.color, Side::KingSide);
         }
     }
-    if (move.piece.type == Piece::Type::Rook && move.piece.color == Color::Black) {
+    if (piece.type == Piece::Type::Rook && piece.color == Color::Black) {
         if (move.fromSquare == Square({0,7})) {
-            expireCastlingAvailability(move.piece.color, Side::QueenSide);
+            expireCastlingAvailability(piece.color, Side::QueenSide);
         } else if (move.fromSquare == Square({7,7})) {
-            expireCastlingAvailability(move.piece.color, Side::KingSide);
+            expireCastlingAvailability(piece.color, Side::KingSide);
         }
     }
 
-    if (move.piece.type == Piece::Type::Pawn &&
+    if (piece.type == Piece::Type::Pawn &&
         m_enPassantSquare.has_value() &&
         move.toSquare == m_enPassantSquare.value()
     ) {
@@ -413,17 +413,17 @@ void Board::forceMakeMove(Move const& move) {
         m_grid[move.toSquare.col][move.fromSquare.row] = std::nullopt;
     }
 
-    if (move.piece.type == Piece::Type::Pawn && std::abs(move.fromSquare.row - move.toSquare.row) == 2) {
-        std::uint8_t pawn_direction = move.piece.color == Color::Black ? -1 : 1;
+    if (piece.type == Piece::Type::Pawn && std::abs(move.fromSquare.row - move.toSquare.row) == 2) {
+        std::uint8_t pawn_direction = piece.color == Color::Black ? -1 : 1;
         m_enPassantSquare = Square({move.fromSquare.col, static_cast<uint8_t>(move.fromSquare.row + pawn_direction)});
     } else {
         m_enPassantSquare = std::nullopt;
     }
 
     m_grid[move.fromSquare.col][move.fromSquare.row] = std::nullopt;
-    m_grid[move.toSquare.col][move.toSquare.row] = move.piece;
+    m_grid[move.toSquare.col][move.toSquare.row] = piece;
 
-    bool is_castling = move.piece.type == Piece::Type::King && std::abs(move.fromSquare.col - move.toSquare.col) >= 2;
+    bool is_castling = piece.type == Piece::Type::King && std::abs(move.fromSquare.col - move.toSquare.col) >= 2;
     if (is_castling) {
         assert(move.fromSquare.row == move.toSquare.row);
         assert(move.fromSquare.col == 4);
@@ -442,11 +442,11 @@ void Board::forceMakeMove(Move const& move) {
         }
     }
     if (move.promotionTo.has_value()) {
-        assert(move.piece.type == Piece::Type::Pawn);
+        assert(piece.type == Piece::Type::Pawn);
         assert(move.toSquare.row == 0 || move.toSquare.row == 7);
         assert(move.promotionTo.value() != Piece::Type::Pawn);
         assert(move.promotionTo.value() != Piece::Type::King);
-        m_grid[move.toSquare.col][move.toSquare.row] = Piece {move.promotionTo.value(), move.piece.color};
+        m_grid[move.toSquare.col][move.toSquare.row] = Piece {move.promotionTo.value(), piece.color};
     }
 }
 

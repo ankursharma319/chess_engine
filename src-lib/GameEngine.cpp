@@ -186,8 +186,9 @@ std::unordered_set<ChessEngineLib::Square> king_destinations(
 bool is_pawn_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLib::Move const& move) {
     assert(move.fromSquare.row != 0 && move.fromSquare.row != 7);
 
-    bool spawn_position = move.piece.color == ChessEngineLib::Color::White ? move.fromSquare.row == 1 : move.fromSquare.row == 6;
-    std::int8_t movement_dir = move.piece.color == ChessEngineLib::Color::White ? 1 : -1;
+    ChessEngineLib::Piece piece = board.at(move.fromSquare).value();
+    bool spawn_position = piece.color == ChessEngineLib::Color::White ? move.fromSquare.row == 1 : move.fromSquare.row == 6;
+    std::int8_t movement_dir = piece.color == ChessEngineLib::Color::White ? 1 : -1;
     std::uint8_t expected_single_move_row = move.fromSquare.row + movement_dir;
 
     // straight move
@@ -325,17 +326,18 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
 
     // castle
     VLOG(3) << "not a normal king move, check if its castling and legal";
-    bool spawn_position = move.piece.color == ChessEngineLib::White ?
+    ChessEngineLib::Piece piece = board.at(move.fromSquare).value();
+    bool spawn_position = piece.color == ChessEngineLib::White ?
         move.fromSquare == ChessEngineLib::Square({4,0}) :
         move.fromSquare == ChessEngineLib::Square({4,7});
     bool row_changed = move.fromSquare.row != move.toSquare.row;
     bool castle_kingside_played = move.toSquare.col == 6 && spawn_position && !row_changed;
     bool castle_queenside_played = move.toSquare.col == 2 && spawn_position && !row_changed;
     if (castle_kingside_played) {
-        return castling_allowed(board, move.piece.color, ChessEngineLib::Side::KingSide);
+        return castling_allowed(board, piece.color, ChessEngineLib::Side::KingSide);
     }
     if (castle_queenside_played) {
-        return castling_allowed(board, move.piece.color, ChessEngineLib::Side::QueenSide);
+        return castling_allowed(board, piece.color, ChessEngineLib::Side::QueenSide);
     }
     VLOG(3) << "castling also not played, not legal";
     return false;
@@ -378,7 +380,7 @@ std::unordered_set<Square> generateLegalDestinations(Board const& board, Square 
     for (auto it = dsts.begin(); it != dsts.end();) {
         Square dst = *it;
         Board board_copy = board;
-        Move move = Move(board.at(source).value(), source, dst);
+        Move move = Move(source, dst);
         board_copy.forceMakeMove(move);
         VLOG(4) << "check if king capture possible after theoretical move " << move;
         if (isKingCapturePossibleNextMove(board_copy)) {
@@ -422,10 +424,6 @@ bool isMovePseudoLegal(Board const& board, Move const& move) {
     std::optional<Piece> const& piece = board.at(move.fromSquare);
     if (!piece.has_value()) {
         VLOG(3) << "illegal move because no piece on source";
-        return false;
-    }
-    if (piece.value() != move.piece) {
-        VLOG(3) << "illegal move because of piece mismatch";
         return false;
     }
     if (piece.value().color != board.getNextMoveColor()) {
@@ -535,12 +533,12 @@ std::unordered_set<Move> getAllLegalMoves(Board const& board) {
             for (Square dst: legal_dsts) {
                 Piece const& piece = board.at({col, row}).value();
                 if (is_pawn_promotion(piece, dst)) {
-                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Rook));
-                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Queen));
-                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Bishop));
-                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst, Piece::Type::Knight));
+                    legal_moves.insert(Move(Square {col, row}, dst, Piece::Type::Rook));
+                    legal_moves.insert(Move(Square {col, row}, dst, Piece::Type::Queen));
+                    legal_moves.insert(Move(Square {col, row}, dst, Piece::Type::Bishop));
+                    legal_moves.insert(Move(Square {col, row}, dst, Piece::Type::Knight));
                 } else {
-                    legal_moves.insert(Move(board.at({col, row}).value(), Square {col, row}, dst));
+                    legal_moves.insert(Move(Square {col, row}, dst));
                 }
             }
         }

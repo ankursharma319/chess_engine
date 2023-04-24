@@ -136,7 +136,7 @@ std::optional<Square> find_src_square(
                 auto const& opt = board.at(Square {col, row});
                 opt.has_value() && opt.value() == piece
             ) {
-                Move mv = {piece, {col, row}, to, promotionTo};
+                Move mv = {{col, row}, to, promotionTo};
                 if (isMoveLegal(board, std::move(mv))) {
                     return Square {col, row};
                 }
@@ -156,7 +156,7 @@ std::optional<std::uint8_t> find_src_row(
             auto const& opt = board.at(Square {from_col, row});
             opt.has_value() && opt.value() == piece
         ) {
-            Move mv = {piece, {from_col, row}, to, promotionTo};
+            Move mv = {{from_col, row}, to, promotionTo};
             if (isMoveLegal(board, std::move(mv))) {
                 return row;
             }
@@ -175,7 +175,7 @@ std::optional<std::uint8_t> find_src_col(
             auto const& opt = board.at(Square {col, from_row});
             opt.has_value() && opt.value() == piece
         ) {
-            Move mv = {piece, {col, from_row}, to, promotionTo};
+            Move mv = {{col, from_row}, to, promotionTo};
             if (isMoveLegal(board, std::move(mv))) {
                 return col;
             }
@@ -323,7 +323,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
                 isCastle = std::make_optional(Side::KingSide);
             }
             Piece piece {type, color};
-            Move move {piece, from, to, promotionTo};
+            Move move {from, to, promotionTo};
             Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
             bool is_valid = makeMove(board, move);
             if (!is_valid) {
@@ -394,7 +394,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             VLOG(3) << "Couldnt infer the source square for move";
             return std::nullopt;
         }
-        Move move {piece, from, to, promotionTo};
+        Move move {from, to, promotionTo};
         Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
         bool is_valid = makeMove(board, move);
         if (!is_valid) {
@@ -497,7 +497,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         }
     }
     if (!moves.empty() && moves.back().isCheckmate) {
-        if (moves.back().move.piece.color == Color::White) {
+        if (moves.back().piece.color == Color::White) {
             result = ResultType::WhiteWin;
         } else {
             result = ResultType::BlackWin;

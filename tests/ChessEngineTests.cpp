@@ -276,7 +276,7 @@ TEST_F(EngineTestFixture, board_allows_making_legal_moves) {
     for (const auto& [src, dsts]: expectedValidDestinations) {
         Piece piece = board.at(src).value();
         for(Square dst: dsts) {
-            Move move {piece, src, dst};
+            Move move {src, dst};
             EXPECT_TRUE(makeMove(board, move)) << " for move " << move;
             EXPECT_EQ(piece, board.at(dst).value());
             // en passant might still put some piece on dst
@@ -293,8 +293,7 @@ TEST_F(EngineTestFixture, board_allows_making_legal_moves) {
         for (std::uint8_t col=0; col<8; col++) {
             for (std::uint8_t row=0; row<8; row++) {
                 Square dst = Square {col, row};
-                Piece piece = board.at(src).value_or(black_king);
-                Move move {piece, src, dst};
+                Move move {src, dst};
                 EXPECT_FALSE(makeMove(board, move));
                 EXPECT_EQ(board_init, board);
             }
@@ -305,9 +304,7 @@ TEST_F(EngineTestFixture, board_allows_making_legal_moves) {
 TEST_F(EngineTestFixture, fen_gets_updated_after_legal_castling_move) {
     std::string fen = "rnbqk2r/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR b KQkq - 0 4";
     Board board = Board::fromFen(fen).value();
-    EXPECT_FALSE(makeMove(board, Move(black_rook, {4,7}, {6,7})));
-    EXPECT_EQ(fen, board.fen());
-    EXPECT_TRUE(makeMove(board, Move(black_king, {4,7}, {6,7})));
+    EXPECT_TRUE(makeMove(board, Move({4,7}, {6,7})));
     EXPECT_EQ("rnbq1rk1/ppppppbp/5np1/8/2PP3P/2N5/PP2PPP1/R1BQKBNR w KQ - 1 5", board.fen());
 }
 
@@ -317,7 +314,7 @@ TEST_F(EngineTestFixture, enpassant_captured_pawn_removed_from_board_after_make_
     EXPECT_TRUE(board.at({2,4}).has_value());
     EXPECT_TRUE(board.at({1,4}).has_value());
     EXPECT_FALSE(board.at({1,5}).has_value());
-    EXPECT_TRUE(makeMove(board, Move(white_pawn, {2,4}, {1,5})));
+    EXPECT_TRUE(makeMove(board, Move({2,4}, {1,5})));
     EXPECT_FALSE(board.at({2,4}).has_value());
     EXPECT_FALSE(board.at({1,4}).has_value());
     EXPECT_TRUE(board.at({1,5}).has_value());
@@ -332,11 +329,11 @@ TEST_F(EngineTestFixture, promotion_of_pawn_is_allowed) {
     EXPECT_EQ(white_pawn, board.at({3,6}).value());
     EXPECT_FALSE(board.at({3,7}).has_value());
 
-    EXPECT_FALSE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::King)));
-    EXPECT_FALSE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::Pawn)));
+    EXPECT_FALSE(makeMove(board, Move({3,6}, {3,7}, Piece::Type::King)));
+    EXPECT_FALSE(makeMove(board, Move({3,6}, {3,7}, Piece::Type::Pawn)));
     EXPECT_EQ(fen, board.fen());
 
-    EXPECT_TRUE(makeMove(board, Move(white_pawn, {3,6}, {3,7}, Piece::Type::Queen)));
+    EXPECT_TRUE(makeMove(board, Move({3,6}, {3,7}, Piece::Type::Queen)));
     EXPECT_FALSE(board.at({3,6}).has_value());
     EXPECT_TRUE(board.at({3,7}).has_value());
     EXPECT_EQ(white_queen, board.at({3,7}).value());

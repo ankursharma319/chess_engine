@@ -74,7 +74,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_EQ(game.moveAt(10).value(), game.moveAt(5, Color::Black));
 
     VLOG(2) << "Starting tests for move #1";
-    ASSERT_EQ(Move({white_pawn, {4,1}, {4, 3}}), game.moveAt(1).value().move);
+    ASSERT_EQ(Move({{4,1}, {4, 3}}), game.moveAt(1).value().move);
     ASSERT_EQ(white_pawn, game.moveAt(1).value().piece);
     ASSERT_FALSE(game.moveAt(1).value().isCheck);
     ASSERT_FALSE(game.moveAt(1).value().isCapture);
@@ -84,7 +84,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(1).value().isCastle.has_value());
 
     VLOG(2) << "Starting tests for move #2";
-    ASSERT_EQ(Move({black_pawn, {4,6}, {4, 4}}), game.moveAt(2).value().move);
+    ASSERT_EQ(Move({{4,6}, {4, 4}}), game.moveAt(2).value().move);
     ASSERT_EQ(black_pawn, game.moveAt(2).value().piece);
     ASSERT_FALSE(game.moveAt(2).value().isCheck);
     ASSERT_FALSE(game.moveAt(2).value().isCapture);
@@ -94,7 +94,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(2).value().isCastle.has_value());
 
     VLOG(2) << "Starting tests for move #9";
-    ASSERT_EQ(Move({white_king, {4,0}, {6, 0}}), game.moveAt(9).value().move);
+    ASSERT_EQ(Move({{4,0}, {6, 0}}), game.moveAt(9).value().move);
     ASSERT_EQ(white_king, game.moveAt(9).value().piece);
     ASSERT_FALSE(game.moveAt(9).value().isCheck);
     ASSERT_FALSE(game.moveAt(9).value().isCapture);
@@ -103,7 +103,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(9).value().isSrcRankAmbigious);
     ASSERT_EQ(Side::KingSide, game.moveAt(9).value().isCastle.value());
 
-    ASSERT_EQ(Move({black_knight, {1,7}, {3, 6}}), game.moveAt(20).value().move);
+    ASSERT_EQ(Move({{1,7}, {3, 6}}), game.moveAt(20).value().move);
     ASSERT_EQ(black_knight, game.moveAt(20).value().piece);
     ASSERT_FALSE(game.moveAt(20).value().isCheck);
     ASSERT_FALSE(game.moveAt(20).value().isCapture);
@@ -112,7 +112,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(20).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(20).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({white_bishop, {1,2}, {2, 3}}), game.moveAt(43).value().move);
+    ASSERT_EQ(Move({{1,2}, {2, 3}}), game.moveAt(43).value().move);
     ASSERT_EQ(white_bishop, game.moveAt(43).value().piece);
     ASSERT_FALSE(game.moveAt(43).value().isCheck);
     ASSERT_TRUE(game.moveAt(43).value().isCapture);
@@ -121,7 +121,7 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(43).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(43).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({black_rook, {4,7}, {4, 0}}), game.moveAt(50).value().move);
+    ASSERT_EQ(Move({{4,7}, {4, 0}}), game.moveAt(50).value().move);
     ASSERT_EQ(black_rook, game.moveAt(50).value().piece);
     ASSERT_TRUE(game.moveAt(50).value().isCheck);
     ASSERT_TRUE(game.moveAt(50).value().isCapture);
@@ -165,7 +165,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move({white_pawn, {4,6}, {4, 7}, std::make_optional(Piece::Type::Queen)}), game.moveAt(87).value().move);
+    ASSERT_EQ(Move({{4,6}, {4, 7}, std::make_optional(Piece::Type::Queen)}), game.moveAt(87).value().move);
     ASSERT_EQ(white_pawn, game.moveAt(87).value().piece);
     ASSERT_TRUE(game.moveAt(87).value().isCheck);
     ASSERT_FALSE(game.moveAt(87).value().isCapture);
@@ -174,7 +174,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_FALSE(game.moveAt(87).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(87).value().isCastle.has_value());
 
-    ASSERT_EQ(Move({white_queen, {2,4}, {1, 3}}), game.moveAt(101).value().move);
+    ASSERT_EQ(Move({{2,4}, {1, 3}}), game.moveAt(101).value().move);
     ASSERT_EQ(white_queen, game.moveAt(101).value().piece);
     ASSERT_FALSE(game.moveAt(101).value().isCheck);
     ASSERT_FALSE(game.moveAt(101).value().isCapture);
@@ -195,7 +195,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move(white_knight, {0,2}, {2, 3}), game.moveAt(45).value().move);
+    ASSERT_EQ(Move({0,2}, {2, 3}), game.moveAt(45).value().move);
     ASSERT_EQ(white_knight, game.moveAt(45).value().piece);
     ASSERT_FALSE(game.moveAt(45).value().isCheck);
     ASSERT_FALSE(game.moveAt(45).value().isCapture);
@@ -216,7 +216,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_check
 
     VLOG(2) << "Making assertions about the last move";
     ASSERT_TRUE(game.moveAt(123).has_value());
-    ASSERT_EQ(Move(white_queen, {2,2}, {4, 4}), game.moveAt(123).value().move);
+    ASSERT_EQ(Move({2,2}, {4, 4}), game.moveAt(123).value().move);
     ASSERT_EQ(white_queen, game.moveAt(123).value().piece);
     ASSERT_FALSE(game.moveAt(123).value().isCheck);
     ASSERT_TRUE(game.moveAt(123).value().isCapture);
@@ -238,7 +238,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_castle) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
-    ASSERT_EQ(Move(white_king, {4,0}, {2, 0}), game.moveAt(21).value().move);
+    ASSERT_EQ(Move({4,0}, {2, 0}), game.moveAt(21).value().move);
     ASSERT_EQ(white_king, game.moveAt(21).value().piece);
     ASSERT_FALSE(game.moveAt(21).value().isCheck);
     ASSERT_FALSE(game.moveAt(21).value().isCapture);

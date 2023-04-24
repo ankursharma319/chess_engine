@@ -39,15 +39,15 @@ TEST_F(AiPlayerTestFixture, random_move_player_generates_moves) {
     std::optional<Move> move_opt = rmp.getMove(board);
     ASSERT_TRUE(move_opt.has_value());
     EXPECT_TRUE(
-        (white_pawn == move_opt.value().piece) ||
-        (white_knight == move_opt.value().piece)
+        (white_pawn == board.at(move_opt.value().fromSquare)) ||
+        (white_knight == board.at(move_opt.value().fromSquare))
     );
     EXPECT_TRUE(makeMove(board, move_opt.value()));
     move_opt = rmp.getMove(board);
     ASSERT_TRUE(move_opt.has_value());
     EXPECT_TRUE(
-        (black_pawn == move_opt.value().piece) ||
-        (black_knight == move_opt.value().piece)
+        (black_pawn == board.at(move_opt.value().fromSquare)) ||
+        (black_knight == board.at(move_opt.value().fromSquare))
     );
 }
 
