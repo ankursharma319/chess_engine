@@ -21,7 +21,7 @@ struct Square {
         return (col == other.col) && (row == other.row);
     }
     char pgn_rank() const {
-        return row + 1;
+        return row + '1';
     }
     char pgn_file() const {
         return 'a' + col;

@@ -1,7 +1,9 @@
 #include "Game.hpp"
+#include "Board.hpp"
 #include "GameEngine.hpp"
 #include "Move.hpp"
 #include "glog/logging.h"
+
 #include <cassert>
 #include <cctype>
 #include <optional>
@@ -506,6 +508,110 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
     return std::make_optional(std::make_pair(moves, result));
 }
 
+std::string to_pgn_string(std::optional<ResultType> result) {
+    if (!result.has_value()) {
+        return "*";
+    }
+    switch (result.value()) {
+        case ResultType::Draw:
+            return "1/2-1/2";
+        case ResultType::WhiteWin:
+            return "1-0";
+        case ResultType::BlackWin:
+            return "0-1";
+    }
+    throw std::logic_error("Bad switch statement");
+}
+
+std::string to_pgn_string(Game::SevenTagRoster const& roster) {
+    std::string result {};
+    result += "[Event \"" + roster.event + "\"]\n";
+    result += "[Site \"" + roster.site + "\"]\n";
+    result += "[Date \"" + roster.date + "\"]\n";
+    result += "[Round \"" + roster.round + "\"]\n";
+    result += "[White \"" + roster.white + "\"]\n";
+    result += "[Black \"" + roster.black + "\"]\n";
+    result += "[Result \"" + to_pgn_string(roster.result) + "\"]\n";
+    return result;
+}
+
+char to_pgn_char(Piece::Type type) {
+    switch (type) {
+        case Piece::Type::King:
+            return 'K';
+        case Piece::Type::Queen:
+            return 'Q';
+        case Piece::Type::Bishop:
+            return 'B';
+        case Piece::Type::Knight:
+            return 'N';
+        case Piece::Type::Rook:
+            return 'R';
+        case Piece::Type::Pawn:
+        default:
+            throw std::logic_error("shouldnt have been called");
+    }
+}
+
+std::string to_pgn_string(Game::MoveWithContext const& move) {
+    std::string result {};
+    if (move.isCastle.has_value()) {
+        if (move.isCastle.value() == Side::KingSide) {
+            result += "O-O";
+        } else {
+            result += "O-O-O";
+        }
+    } else {
+        if (move.piece.type != Piece::Type::Pawn) {
+            result += to_pgn_char(move.piece.type);
+        }
+        if (move.isSrcFileAmbigious) {
+            result += move.move.fromSquare.pgn_file();
+        }
+        if (move.isSrcRankAmbigious) {
+            result += move.move.fromSquare.pgn_rank();
+        }
+        if (move.isCapture) {
+            result += 'x';
+        }
+        result += move.move.toSquare.pgn_file();
+        result += move.move.toSquare.pgn_rank();
+        if (move.move.promotionTo.has_value()) {
+            result += "=";
+            result += to_pgn_char(move.move.promotionTo.value());
+        }
+    }
+    if (move.isCheck) {
+        result += '+';
+    }
+    if (move.isCheckmate) {
+        result += '#';
+    }
+    return result;
+}
+
+std::string to_pgn_string(std::vector<Game::MoveWithContext> const& moves) {
+    std::string result {};
+    for (std::size_t i = 0; i < moves.size(); i++) {
+        if (i%2 == 0) {
+            result += std::to_string((i/2) + 1);
+            result += ". ";
+        }
+
+        Game::MoveWithContext const& mv = moves.at(i);
+        result += to_pgn_string(mv);
+
+        if (i == moves.size()-1) {
+            continue;
+        }
+        if (i%20 == 19) {
+            result += "\n";
+        } else {
+            result += " ";
+        }
+    }
+    return result;
+}
 }
 
 namespace ChessEngineLib {
@@ -531,11 +637,19 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
     game.roster_ = roster.value().first;
     game.moves_ = moves_optional.value().first;
     game.result_ = moves_optional.value().second;
+    if (game.result_.has_value()) {
+        game.roster_.result = game.result_;
+    }
     return game;
 }
 
 std::string Game::toPgn() const {
-    return "";
+    std::string sevenTagRosterStr = to_pgn_string(roster_);
+    std::string movesPgnStr = to_pgn_string(moves_);
+    if (result_.has_value()) {
+        movesPgnStr += " " + to_pgn_string(result_);
+    }
+    return sevenTagRosterStr + "\n" + movesPgnStr + "\n";
 }
 
 Game::SevenTagRoster const& Game::sevenTagRoster() const {

@@ -186,7 +186,7 @@ void write_en_passant_fen_chunk(std::ostream& os, std::optional<ChessEngineLib::
         return;
     }
     ChessEngineLib::Square square = en_passant_square.value();
-    os << square.pgn_file() << +square.pgn_rank();
+    os << square.pgn_file() << square.pgn_rank();
 }
 
 }

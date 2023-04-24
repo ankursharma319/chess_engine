@@ -28,8 +28,6 @@ protected:
     const Piece white_rook = Piece(Piece::Type::Rook, Color::White);
     const Piece white_queen = Piece(Piece::Type::Queen, Color::White);
     const Piece white_king = Piece(Piece::Type::King, Color::White);
-
-    const std::string starting_position_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 };
 
 
@@ -129,6 +127,22 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     ASSERT_FALSE(game.moveAt(50).value().isSrcFileAmbigious);
     ASSERT_FALSE(game.moveAt(50).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(50).value().isCastle.has_value());
+
+    std::string expected_pgn = R"raw([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7
+11. c4 c6 12. cxb5 axb5 13. Nc3 Bb7 14. Bg5 b4 15. Nb1 h6 16. Bh4 c5 17. dxe5 Nxe4 18. Bxe7 Qxe7 19. exd6 Qf6 20. Nbd2 Nxd6
+21. Nc4 Nxc4 22. Bxc4 Nb6 23. Ne5 Rae8 24. Bxf7+ Rxf7 25. Nxf7 Rxe1+ 26. Qxe1 Kxf7 27. Qe3 Qg5 28. Qxg5 hxg5 29. b3 Ke6 30. a3 Kd6
+31. axb4 cxb4 32. Ra5 Nd5 33. f3 Bc8 34. Kf2 Bf5 35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5 40. Rd6 Kc5
+41. Ra6 Nf2 42. g4 Bd3 43. Re6 1/2-1/2
+)raw";
+    ASSERT_EQ(expected_pgn, game.toPgn());
 }
 
 
@@ -184,6 +198,22 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_FALSE(game.moveAt(101).value().isCastle.has_value());
 
     ASSERT_EQ(ResultType::WhiteWin, game.result().value());
+    std::string expected_pgn = R"raw([Event "Rated Blitz game"]
+[Site "https://lichess.org/89893Phw"]
+[Date "2023.04.04"]
+[Round ""]
+[White "DESTROYER7777777"]
+[Black "kenkons"]
+[Result "1-0"]
+
+1. d4 Nf6 2. c4 d6 3. Nf3 g6 4. Nc3 Bg7 5. Bg5 h6 6. Bh4 g5 7. Bg3 Nh5 8. e3 c5 9. d5 Bxc3+ 10. bxc3 Kd7
+11. Ne5+ dxe5 12. Bxe5 Qa5 13. Bxh8 f6 14. Rc1 Qd8 15. Qxh5 Qxh8 16. Be2 Kc7 17. h4 Qg7 18. hxg5 hxg5 19. Qh7 Qxh7 20. Rxh7 Kd6
+21. Rh8 Nd7 22. Bg4 b6 23. Kd2 Rb8 24. a4 Ba6 25. Rxb8 Nxb8 26. Kd3 e5 27. Rh1 e4+ 28. Kxe4 Bxc4 29. Be6 Bb3 30. Kf5 Bxa4
+31. Kxf6 Bc2 32. Rh7 Bxh7 33. f3 a5 34. e4 Nd7+ 35. Bxd7 Kxd7 36. e5 Bg8 37. e6+ Kd6 38. e7 Kd7 39. d6 a4 40. Kg7 Bh7
+41. Kf7 Bg6+ 42. Kxg6 a3 43. Kf7 a2 44. e8=Q+ Kxd6 45. Qe6+ Kc7 46. Qxa2 Kc6 47. Qe6+ Kb5 48. Qd5 Ka5 49. Qc4 b5 50. Qxc5 Ka4
+51. Qb4# 1-0
+)raw";
+    ASSERT_EQ(expected_pgn, game.toPgn());
 }
 
 TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
@@ -203,6 +233,20 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_FALSE(game.moveAt(45).value().isSrcFileAmbigious);
     ASSERT_TRUE(game.moveAt(45).value().isSrcRankAmbigious);
     ASSERT_FALSE(game.moveAt(45).value().isCastle.has_value());
+
+    std::string expected_pgn = R"raw([Event ""]
+[Site ""]
+[Date ""]
+[Round ""]
+[White ""]
+[Black ""]
+[Result "*"]
+
+1. d4 d5 2. Nf3 Nf6 3. Nc3 Na6 4. Bd2 Bd7 5. Na4 Rb8 6. Ne5 Qc8 7. Nc5 g6 8. Ncd3 Ng8 9. f3 Kd8 10. Nf2 Ke8
+11. Nc4 e6 12. Nd3 Ra8 13. Na5 Be7 14. Nc1 f6 15. a4 g5 16. Na2 Rb8 17. Nb4 Ra8 18. Nxd5 Nh6 19. Ne3 Rb8 20. c3 Ra8
+21. Nc2 Rb8 22. Na3 Kf7 23. N3c4
+)raw";
+    ASSERT_EQ(expected_pgn, game.toPgn());
 }
 
 TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_checkmate_capture_together) {
@@ -227,6 +271,24 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_check
 
     VLOG(2) << "Making assertion about the result";
     ASSERT_EQ(ResultType::WhiteWin, game.result().value());
+
+    std::string expected_pgn = R"raw([Event ""]
+[Site ""]
+[Date ""]
+[Round ""]
+[White ""]
+[Black ""]
+[Result "1-0"]
+
+1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
+11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6
+21. Qf8 Kf6 22. Qa8 c4 23. Rfe1 Kg7 24. Qxa7 Kf6 25. Qc5 Kg7 26. Qxb5 Kf6 27. Qxc4 Kg7 28. a4 Kf6 29. a5 Kg7 30. a6 Kf6
+31. a7 Kg7 32. b4 Kf6 33. b5 Kg7 34. b6 Kf6 35. Qb3 Kg7 36. c4 Kf6 37. b7 Kg7 38. c5 Kf6 39. Re6+ fxe6 40. Re1 Ke7
+41. b8=Q Kf6 42. a8=Q Ke7 43. c6 Kf6 44. c7 Ke7 45. c8=Q Kf6 46. Q8g3 Ke7 47. Qca6 Kd7 48. Qh8 Ke7 49. Qh6 Kd7 50. Qab5+ Ke7
+51. Qbc3 Kf7 52. Rf1 Ke7 53. Qge3 Kf7 54. Qb8 Ke7 55. Qbc8 Kf7 56. Qhh8 Ke7 57. h3 e5 58. Qa8 Ke6 59. Qab8 Kf5 60. Qbc7 Ke6
+61. Qhg7 Kf5 62. Qc3xe5# 1-0
+)raw";
+    ASSERT_EQ(expected_pgn, game.toPgn());
 }
 
 TEST_F(GameTestFixture, parsing_pgn_with_castle) {
@@ -248,4 +310,17 @@ TEST_F(GameTestFixture, parsing_pgn_with_castle) {
     ASSERT_TRUE(game.moveAt(21).value().isCastle.has_value());
     ASSERT_EQ(Side::QueenSide, game.moveAt(21).value().isCastle.value());
     ASSERT_FALSE(game.result().has_value());
+
+    std::string expected_pgn = R"raw([Event ""]
+[Site ""]
+[Date ""]
+[Round ""]
+[White ""]
+[Black ""]
+[Result "*"]
+
+1. d4 d5 2. Nf3 e5 3. Bg5 Nf6 4. c4 dxc4 5. Nc3 Ne4 6. Qa4+ Bd7 7. h3 Nxc3 8. e3 Nd1 9. Bxc4 Nc3 10. g4 Nd5
+11. O-O-O
+)raw";
+    ASSERT_EQ(expected_pgn, game.toPgn());
 }
