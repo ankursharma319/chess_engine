@@ -14,6 +14,7 @@ namespace ChessEngineLib {
 class Game {
 
 public:
+    Game();
     static std::optional<Game> fromPgn(std::string const& pgn);
 
     struct SevenTagRoster {
@@ -65,11 +66,14 @@ public:
 
     std::optional<MoveWithContext> moveAt(std::size_t moveNum, Color color) const;
     std::optional<MoveWithContext> moveAt(std::size_t halfMoveNum) const;
+    std::size_t movesSize() const;
+    Board const& board() const;
 
 private:
     SevenTagRoster roster_;
     std::vector<MoveWithContext> moves_;
     std::optional<ResultType> result_;
+    Board board_;
 };
 
 }

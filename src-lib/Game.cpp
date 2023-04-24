@@ -6,28 +6,13 @@
 
 #include <cassert>
 #include <cctype>
+#include <exception>
 #include <optional>
 #include <stdexcept>
 
 namespace {
 
 using namespace ChessEngineLib;
-
-std::vector<std::string> split_string(
-    const std::string & x,
-    const std::string delim
-) {
-    std::vector<std::string> chunks {};
-    auto start = 0U;
-    auto end = x.find(delim);
-    while (end != std::string::npos) {
-        chunks.push_back(x.substr(start, end - start));
-        start = end + delim.length();
-        end = x.find(delim, start);
-    }
-    chunks.push_back(x.substr(start, end - start));
-    return chunks;
-}
 
 bool is_spacy(char c) {
     return c == ' ' || c == '\n' || c == '\t';
@@ -616,9 +601,14 @@ std::string to_pgn_string(std::vector<Game::MoveWithContext> const& moves) {
 
 namespace ChessEngineLib {
 
+Game::Game()
+: roster_ {},
+moves_{},
+result_ {std::nullopt},
+board_ {Board::startingPosBoard()}
+{}
+
 std::optional<Game> Game::fromPgn(std::string const& pgn) {
-    (void) pgn;
-    (void) split_string;
     VLOG(2) << "fromPgn called with pgn of size = " << pgn.size();
     std::optional<std::pair<SevenTagRoster, std::size_t>> roster = parseRoster(pgn);
     if (!roster.has_value()) {
@@ -627,13 +617,13 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
 
     std::size_t i = roster.value().second;
     VLOG(2) << "calling parseMoves from i = " << i;
-    Board board = Board::startingPosBoard();
-    auto moves_optional = parseMovesAndResult(pgn, i, board);
+
+    Game game {};
+    auto moves_optional = parseMovesAndResult(pgn, i, game.board_);
     if (!moves_optional.has_value()) {
         return std::nullopt;
     }
 
-    Game game {};
     game.roster_ = roster.value().first;
     game.moves_ = moves_optional.value().first;
     game.result_ = moves_optional.value().second;
@@ -660,6 +650,10 @@ std::optional<ResultType> Game::result() const {
     return result_;
 }
 
+std::size_t Game::movesSize() const {
+    return moves_.size();
+}
+
 std::optional<Game::MoveWithContext> Game::moveAt(std::size_t moveNum, Color color) const {
     return moveAt((moveNum-1)*2 + (color == Color::Black ? 2:1));
 }
@@ -669,6 +663,10 @@ std::optional<Game::MoveWithContext> Game::moveAt(std::size_t halfMoveNum) const
         return std::nullopt;
     }
     return moves_.at(halfMoveNum-1);
+}
+
+Board const& Game::board() const {
+    return board_;
 }
 
 Game::MoveWithContext::MoveWithContext(

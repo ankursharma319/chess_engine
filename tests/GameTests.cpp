@@ -64,6 +64,8 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
     VLOG(2) << "Tests for seven tag roster passing";
 
     ASSERT_EQ(ResultType::Draw, game.result().value());
+    ASSERT_EQ(85, game.movesSize());
+    ASSERT_EQ("8/8/4R1p1/2k3p1/1p4P1/1P1b1P2/3K1n2/8 b - - 2 43", game.board().fen());
 
     VLOG(2) << "Starting tests to make sure both moveAt funcs are consistent";
     ASSERT_EQ(game.moveAt(1).value(), game.moveAt(1, Color::White)) << "moveAt 1";
@@ -179,6 +181,9 @@ TEST_F(GameTestFixture, parsing_pgn_with_promotion_and_checkmate) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
+    ASSERT_EQ(101, game.movesSize());
+    ASSERT_EQ("8/5K2/8/1p4p1/kQ6/2P2P2/6P1/8 b - - 2 51", game.board().fen());
+
     ASSERT_EQ(Move({{4,6}, {4, 7}, std::make_optional(Piece::Type::Queen)}), game.moveAt(87).value().move);
     ASSERT_EQ(white_pawn, game.moveAt(87).value().piece);
     ASSERT_TRUE(game.moveAt(87).value().isCheck);
@@ -225,6 +230,9 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
+    ASSERT_EQ(45, game.movesSize());
+    ASSERT_EQ("1rq4r/pppbbk1p/n3pp1n/N5p1/P1NP4/2P2P2/1P1BP1PP/R2QKB1R b KQ - 6 23", game.board().fen());
+
     ASSERT_EQ(Move({0,2}, {2, 3}), game.moveAt(45).value().move);
     ASSERT_EQ(white_knight, game.moveAt(45).value().piece);
     ASSERT_FALSE(game.moveAt(45).value().isCheck);
@@ -257,6 +265,9 @@ TEST_F(GameTestFixture, parsing_pgn_with_ambigious_rank_and_file_and_check_check
     std::optional<Game> game_opt = Game::fromPgn(pgn);
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
+
+    ASSERT_EQ(123, game.movesSize());
+    ASSERT_EQ("8/2Q3Q1/8/4Qk2/8/4Q2P/5PP1/5RK1 b - - 0 62", game.board().fen());
 
     VLOG(2) << "Making assertions about the last move";
     ASSERT_TRUE(game.moveAt(123).has_value());
@@ -300,6 +311,9 @@ TEST_F(GameTestFixture, parsing_pgn_with_castle) {
     ASSERT_TRUE(game_opt.has_value());
     Game game = game_opt.value();
 
+    ASSERT_EQ(21, game.movesSize());
+    ASSERT_EQ("rn1qkb1r/pppb1ppp/8/3np1B1/Q1BP2P1/4PN1P/PP3P2/2KR3R b kq - 2 11", game.board().fen());
+
     ASSERT_EQ(Move({4,0}, {2, 0}), game.moveAt(21).value().move);
     ASSERT_EQ(white_king, game.moveAt(21).value().piece);
     ASSERT_FALSE(game.moveAt(21).value().isCheck);
@@ -324,3 +338,7 @@ TEST_F(GameTestFixture, parsing_pgn_with_castle) {
 )raw";
     ASSERT_EQ(expected_pgn, game.toPgn());
 }
+
+TEST_F(GameTestFixture, typical_game_flow) {
+}
+
