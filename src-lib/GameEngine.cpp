@@ -167,17 +167,20 @@ bool castling_allowed(
 std::unordered_set<ChessEngineLib::Square> king_destinations(
     ChessEngineLib::Board const& board, ChessEngineLib::Square source
 ) {
+    VLOG(9) << "generating king destinations from source " << source;
     using namespace ChessEngineLib;
     std::unordered_set<Square> dests =
         short_range_piece_destinations(board, source, {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}});
     Piece const& piece = board.at(source).value();
     bool spawn_position = piece.color == Color::White ? source == Square({4,0}) : source == Square({4,7});
     if(castling_allowed(board, piece.color, ChessEngineLib::Side::KingSide)) {
+        VLOG(9) << "adding kingside castle as a possible dest";
         assert(spawn_position);
         dests.insert(Square({6,source.row}));
     }
     if(castling_allowed(board, piece.color, ChessEngineLib::Side::QueenSide)) {
         assert(spawn_position);
+        VLOG(9) << "adding queenside castle as a possible dest";
         dests.insert(Square({2,source.row}));
     }
     return dests;

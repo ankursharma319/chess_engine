@@ -384,6 +384,7 @@ void Board::expireCastlingAvailability(Color color, Side side) {
 
 // No validation done whether the move is legal or not
 void Board::forceMakeMove(Move const& move) {
+    VLOG(6) << "Asked to forceMakeMove move " << move << " on board " << *this;
     Piece piece = at(move.fromSquare).value();
     m_nextMoveColor = m_nextMoveColor == Color::Black ? Color::White : Color::Black;
     bool is_capture = at(move.toSquare).has_value();
@@ -403,18 +404,18 @@ void Board::forceMakeMove(Move const& move) {
         expireCastlingAvailability(piece.color, Side::KingSide);
         expireCastlingAvailability(piece.color, Side::QueenSide);
     }
-    if (piece.type == Piece::Type::Rook && piece.color == Color::White) {
-        if (move.fromSquare == Square({0,0})) {
+    if (piece.type == Piece::Type::Rook) {
+        if (move.fromSquare.col == 0) {
             expireCastlingAvailability(piece.color, Side::QueenSide);
-        } else if (move.fromSquare == Square({7,0})) {
+        } else if (move.fromSquare.col == 7) {
             expireCastlingAvailability(piece.color, Side::KingSide);
         }
     }
-    if (piece.type == Piece::Type::Rook && piece.color == Color::Black) {
-        if (move.fromSquare == Square({0,7})) {
-            expireCastlingAvailability(piece.color, Side::QueenSide);
-        } else if (move.fromSquare == Square({7,7})) {
-            expireCastlingAvailability(piece.color, Side::KingSide);
+    if (is_capture && at(move.toSquare).value().type == Piece::Type::Rook) {
+        if (move.toSquare.col == 0) {
+            expireCastlingAvailability(at(move.toSquare).value().color, Side::QueenSide);
+        } else if (move.toSquare.col == 7) {
+            expireCastlingAvailability(at(move.toSquare).value().color, Side::KingSide);
         }
     }
 
@@ -441,12 +442,14 @@ void Board::forceMakeMove(Move const& move) {
         assert(move.fromSquare.row == move.toSquare.row);
         assert(move.fromSquare.col == 4);
         if (move.toSquare.col == 6) {
+            assert(grid().at(7).at(move.toSquare.row).has_value());
             assert(grid().at(7).at(move.toSquare.row).value().type == Piece::Type::Rook);
             assert(!grid().at(5).at(move.toSquare.row).has_value());
             m_grid[5][move.toSquare.row] = m_grid.at(7).at(move.toSquare.row);
             m_grid[7][move.toSquare.row] = std::nullopt;
         } else {
             assert(move.toSquare.col == 2);
+            assert(grid().at(0).at(move.toSquare.row).has_value());
             assert(grid().at(0).at(move.toSquare.row).value().type == Piece::Type::Rook);
             assert(!grid().at(1).at(move.toSquare.row).has_value());
             assert(!grid().at(3).at(move.toSquare.row).has_value());

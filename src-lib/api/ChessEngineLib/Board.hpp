@@ -41,10 +41,10 @@ public:
 
 private:
     struct CastlingAvailability {
-        bool whiteQueenSide {false};
-        bool whiteKingSide {false};
-        bool blackQueenSide {false};
-        bool blackKingSide {false};
+        bool whiteQueenSide {true};
+        bool whiteKingSide {true};
+        bool blackQueenSide {true};
+        bool blackKingSide {true};
         bool operator==(const CastlingAvailability& other) const;
     };
 

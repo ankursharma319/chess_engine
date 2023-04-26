@@ -770,6 +770,7 @@ Board const& Game::board() const {
 }
 
 bool Game::makeMove(Move const& move) {
+    LOG(INFO) << "In Game, making move " << move << " on board "<< board_;
     if (result_.has_value()) {
         LOG(INFO) << "Game already over my guy, cannot make move " << move;
         return false;
