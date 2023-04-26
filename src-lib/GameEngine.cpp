@@ -343,27 +343,6 @@ bool is_king_move_pseudo_legal(ChessEngineLib::Board const& board, ChessEngineLi
     return false;
 }
 
-bool isKingCapturePossibleNextMove(ChessEngineLib::Board const& board) {
-    using namespace ChessEngineLib;
-    VLOG(4) << "trying to check if king capture is possible next move by generating pseudolegal destinations in theoretical position";
-    for (std::uint8_t col=0; col<8; col++) {
-        for (std::uint8_t row=0; row<8; row++) {
-            std::unordered_set<Square> res = generatePseudoLegalDestinations(board, Square({col, row}));
-            if (!res.empty()) {
-                VLOG(7) << "found " << res.size() << " pseudo legal-moves from square at (" << +col << ", " << +row << ")";
-            }
-            for (Square const& sqr: res) {
-                if (board.at(sqr).has_value() && board.at(sqr).value().type == Piece::Type::King) {
-                    VLOG(4) << "determined that king capture is possible in theoretical position";
-                    return true;
-                }
-            }
-        }
-    }
-    VLOG(4) << "determined that king capture is not possible in theoretical position";
-    return false;
-}
-
 }
 
 namespace ChessEngineLib {
@@ -473,6 +452,26 @@ bool makeMove(Board& board, Move const& move) {
         return false;
     }
     return true;
+}
+
+bool isKingCapturePossibleNextMove(ChessEngineLib::Board const& board) {
+    VLOG(4) << "trying to check if king capture is possible next move by generating pseudolegal destinations in theoretical position";
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            std::unordered_set<Square> res = generatePseudoLegalDestinations(board, Square({col, row}));
+            if (!res.empty()) {
+                VLOG(7) << "found " << res.size() << " pseudo legal-moves from square at (" << +col << ", " << +row << ")";
+            }
+            for (Square const& sqr: res) {
+                if (board.at(sqr).has_value() && board.at(sqr).value().type == Piece::Type::King) {
+                    VLOG(4) << "determined that king capture is possible in theoretical position";
+                    return true;
+                }
+            }
+        }
+    }
+    VLOG(4) << "determined that king capture is not possible in theoretical position";
+    return false;
 }
 
 std::ostream & operator<<(std::ostream &os, ResultType rt) {

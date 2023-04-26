@@ -631,6 +631,7 @@ TEST_F(GameTestFixture, typical_game_flow) {
     ASSERT_TRUE(game.moveAt(123).value().isSrcRankAmbigious);
     ASSERT_TRUE(game.moveAt(123).value().isSrcFileAmbigious);
     ASSERT_TRUE(game.result().has_value());
+    ASSERT_EQ(ResultType::WhiteWin, game.result().value());
     ASSERT_EQ("8/2Q3Q1/8/4Qk2/8/4Q2P/5PP1/5RK1 b - - 0 62", game.board().fen());
     ASSERT_EQ(R"raw(1. d4 e5 2. dxe5 d6 3. Bf4 Nf6 4. exf6 Qxf6 5. Nf3 Bf5 6. e4 Be7 7. Nc3 Nd7 8. exf5 Qxf5 9. Bd3 Ne5 10. Bxf5 d5
 11. Nxe5 c5 12. Nxd5 Rd8 13. Nxe7 Kxe7 14. O-O b5 15. Nc6+ Kf6 16. Nxd8 Rxd8 17. Qxd8+ Kxf5 18. Qh8 Kxf4 19. Qxh7 Ke5 20. Qxg7+ Ke6

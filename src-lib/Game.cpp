@@ -598,23 +598,64 @@ std::string to_pgn_string(std::vector<Game::MoveWithContext> const& moves) {
     return result;
 }
 
-std::optional<Game::MoveWithContext> create_move_with_context_and_make_move(Board& board, Move const& move) {
+std::pair<bool, bool> is_ambigious_src(Board const& board, Move const& move) {
+    bool is_col_ambig = false;
+    bool is_row_ambig = false;
+    Piece piece = board.at(move.fromSquare).value();
+    for (std::uint8_t col=0; col<8; col++) {
+        for (std::uint8_t row=0; row<8; row++) {
+            if (col == move.fromSquare.col && row == move.fromSquare.row) {
+                continue;
+            }
+            auto opt = board.at({col, row});
+            if (!opt.has_value() || opt.value() != piece) {
+                continue;
+            }
+            if (!isMoveLegal(board, Move({col, row}, move.toSquare, move.promotionTo))) {
+                continue;
+            }
+            if (col != move.fromSquare.col) {
+                is_col_ambig = true;
+                continue;
+            }
+            is_row_ambig = true;
+        }
+    }
+    return std::make_pair(is_col_ambig, is_row_ambig);
+}
+
+
+std::optional<std::pair<Game::MoveWithContext, std::optional<ResultType>>> create_move_with_context_and_make_move(
+    Board& board, Move const& move
+) {
     Board board_copy = board;
     bool success = makeMove(board_copy, move);
     if (!success) {
         return std::nullopt;
     }
-    bool isCapture = board.at(move.toSquare).has_value();
-    bool isCheck = false;
+
+    Piece piece = board.at(move.fromSquare).value();
+
     auto result_opt = isGameOver(board_copy);
     bool isCheckmate = result_opt.has_value() && result_opt.value() != ResultType::Draw;
-    bool isSrcFileAmbigious = false;
-    bool isSrcRankAmbigious = false;
-    std::optional<Side> isCastle = std::nullopt;
-    Piece piece = board.at(move.fromSquare).value();
+
+    bool isCheck = false;
+    if (!isCheckmate) {
+        Board board_if_current_player_had_2_moves = board_copy;
+        board_if_current_player_had_2_moves.setNextMoveColor(piece.color);
+        isCheck = isKingCapturePossibleNextMove(board_if_current_player_had_2_moves);
+    }
+
+    bool isCapture = board.at(move.toSquare).has_value();
+
+    auto is_ambigious_pair = is_ambigious_src(board, move);
+    bool isSrcFileAmbigious = is_ambigious_pair.first;
+    bool isSrcRankAmbigious = is_ambigious_pair.second;
     if (isCapture && piece.type == Piece::Type::Pawn) {
         isSrcFileAmbigious = true;
     }
+
+    std::optional<Side> isCastle = std::nullopt;
     if (piece.type == Piece::Type::King && (std::abs(move.fromSquare.col - move.toSquare.col) >= 2)) {
         if (move.toSquare.col == 2) {
             isCastle = Side::QueenSide;
@@ -626,7 +667,7 @@ std::optional<Game::MoveWithContext> create_move_with_context_and_make_move(Boar
 
     Game::MoveWithContext mv {move, piece, isCapture, isCheck, isCheckmate, isSrcFileAmbigious, isSrcRankAmbigious, isCastle};
     board = board_copy;
-    return mv;
+    return std::make_pair(mv, result_opt);
 }
 
 }
@@ -705,11 +746,12 @@ Board const& Game::board() const {
 }
 
 bool Game::makeMove(Move const& move) {
-    std::optional<MoveWithContext> mv = create_move_with_context_and_make_move(board_, move);
+    std::optional<std::pair<MoveWithContext, std::optional<ResultType>>> mv = create_move_with_context_and_make_move(board_, move);
     if (!mv.has_value()) {
         return false;
     }
-    moves_.push_back(mv.value());
+    moves_.push_back(mv.value().first);
+    result_ = mv.value().second;
     return true;
 }
 
