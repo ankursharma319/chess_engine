@@ -10,7 +10,7 @@ GTEST_API_ int main(int argc, char **argv) {
     printf("Running main() from ChessEngineTests.cpp\n");
     // INFO=0, WARNING=1, ERROR=2, and FATAL=3
     FLAGS_stderrthreshold = 2; // also log to stderr, if only logging to file
-    FLAGS_logtostderr = true; // instead of file
+    FLAGS_logtostderr = false; // instead of file
     FLAGS_minloglevel = 0; // lower is more logging
     FLAGS_v = 0; // applies to VLOG, higher is more logging
     google::InitGoogleLogging(argv[0]);
