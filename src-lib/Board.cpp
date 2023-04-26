@@ -156,7 +156,8 @@ void write_next_move_color_fen_chunk(std::ostream& os, ChessEngineLib::Color col
     } else  {
         os << "b";
     }
-};
+}
+
 void write_castling_availability_fen_chunk(std::ostream& os, ChessEngineLib::Board const& board) {
     bool atleast_one = false;
     if (board.isCastlingAvailable(ChessEngineLib::Color::White, ChessEngineLib::Side::KingSide)) {
@@ -320,6 +321,18 @@ std::string Board::fen() const {
     std::ostringstream oss;
     oss << *this;
     return oss.str();
+}
+
+std::string Board::fenWithoutMoveNumbers() const {
+    std::ostringstream os;
+    write_grid_fen_chunk(os, grid());
+    os << " ";
+    write_next_move_color_fen_chunk(os, getNextMoveColor());
+    os << " ";
+    write_castling_availability_fen_chunk(os, *this);
+    os << " ";
+    write_en_passant_fen_chunk(os, getEnPassantSquare());
+    return os.str();
 }
 
 bool Board::CastlingAvailability::operator==(const Board::CastlingAvailability& other) const {

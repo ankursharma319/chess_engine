@@ -76,6 +76,7 @@ private:
     std::vector<MoveWithContext> moves_;
     std::optional<ResultType> result_;
     Board board_;
+    std::unordered_map<std::string, std::size_t> repetitions_;
 };
 
 }

@@ -29,6 +29,10 @@ public:
     std::optional<Square> getEnPassantSquare() const; // Just behind the pawn that moved 2 squares
 
     std::string fen() const;
+
+    // useful for encoding repetitions for threefold repetition
+    std::string fenWithoutMoveNumbers() const;
+
     bool operator==(const Board& other) const;
     bool operator!=(const Board& other) const;
 

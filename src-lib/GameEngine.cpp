@@ -409,6 +409,12 @@ bool isMovePseudoLegal(Board const& board, Move const& move) {
         VLOG(3) << "illegal move because next move is not of this pieces color";
         return false;
     }
+
+    if (board.getHalfMoveClock() >= 50) {
+        VLOG(3) << "illegal move because of 50 fifty move rule";
+        return false;
+    }
+
     assert(move.fromSquare.row < 8);
     assert(move.fromSquare.col < 8);
     assert(move.toSquare.row < 8);

@@ -205,11 +205,28 @@ bool set_src_square(
     throw std::runtime_error("Should not reach this part of the code");
 }
 
-std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<ResultType>>> parseMovesAndResult(
+bool increment_repetition(std::unordered_map<std::string, std::size_t>& repetitions, Board const& board) {
+    std::string key = board.fenWithoutMoveNumbers();
+    if (repetitions.count(key) == 0) {
+        repetitions[key] = 1;
+    } else {
+        repetitions[key] = repetitions.at(key) + 1;
+    }
+    return repetitions[key] >= 3;
+}
+
+struct ParseMovesEtcResult {
+    std::vector<Game::MoveWithContext> moves;
+    std::optional<ResultType> result;
+    std::unordered_map<std::string, std::size_t> repetitions;
+};
+
+std::optional<ParseMovesEtcResult> parseMovesAndResult(
     std::string const& pgn, std::size_t i, Board& board
 ) {
     std::vector<Game::MoveWithContext> moves {};
     std::optional<ResultType> result {};
+    std::unordered_map<std::string, std::size_t> repetitions {};
 
     auto skip_comment = [](std::size_t i, std::string const& pgn) {
         VLOG(6) << "asked to skip comment from i=" << i;
@@ -455,6 +472,8 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         }
         i = res.value().first;
         moves.push_back(res.value().second);
+        [[maybe_unused]] bool repeated_thrice = increment_repetition(repetitions, board);
+        // TODO: use this value somehow?
 
         if(i<pgn.size() && std::isalnum(pgn.at(i))) {
             VLOG(2) << "expected space between black and whites moves";
@@ -478,6 +497,9 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
         }
         i = res.value().first;
         moves.push_back(res.value().second);
+        repeated_thrice = increment_repetition(repetitions, board);
+        // TODO: use this value somehow?
+
         if(i<pgn.size() && std::isalnum(pgn.at(i))) {
             VLOG(2) << "expected space after blacks move but got: " << pgn.at(i);
             return std::nullopt;
@@ -490,7 +512,7 @@ std::optional<std::pair<std::vector<Game::MoveWithContext>, std::optional<Result
             result = ResultType::BlackWin;
         }
     }
-    return std::make_optional(std::make_pair(moves, result));
+    return std::make_optional(ParseMovesEtcResult {moves, result, repetitions});
 }
 
 std::string to_pgn_string(std::optional<ResultType> result) {
@@ -678,7 +700,8 @@ Game::Game()
 : roster_ {},
 moves_{},
 result_ {std::nullopt},
-board_ {Board::startingPosBoard()}
+board_ {Board::startingPosBoard()},
+repetitions_{{board_.fenWithoutMoveNumbers(), 1}}
 {}
 
 std::optional<Game> Game::fromPgn(std::string const& pgn) {
@@ -698,8 +721,9 @@ std::optional<Game> Game::fromPgn(std::string const& pgn) {
     }
 
     game.roster_ = roster.value().first;
-    game.moves_ = moves_optional.value().first;
-    game.result_ = moves_optional.value().second;
+    game.moves_ = moves_optional.value().moves;
+    game.result_ = moves_optional.value().result;
+    game.repetitions_ = moves_optional.value().repetitions;
     if (game.result_.has_value()) {
         game.roster_.result = game.result_;
     }
@@ -746,12 +770,21 @@ Board const& Game::board() const {
 }
 
 bool Game::makeMove(Move const& move) {
-    std::optional<std::pair<MoveWithContext, std::optional<ResultType>>> mv = create_move_with_context_and_make_move(board_, move);
+    if (result_.has_value()) {
+        LOG(INFO) << "Game already over my guy, cannot make move " << move;
+        return false;
+    }
+    std::optional<std::pair<MoveWithContext, std::optional<ResultType>>> mv =
+        create_move_with_context_and_make_move(board_, move);
     if (!mv.has_value()) {
         return false;
     }
     moves_.push_back(mv.value().first);
     result_ = mv.value().second;
+    bool repeated_thrice = increment_repetition(repetitions_, board_);
+    if (repeated_thrice && !result_.has_value()) {
+        result_ = std::make_optional(ResultType::Draw);
+    }
     return true;
 }
 
