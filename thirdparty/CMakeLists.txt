@@ -41,3 +41,16 @@ block()
     FetchContent_MakeAvailable(googletest)
 endblock()
 
+block()
+    set(BENCHMARK_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "Dont automatically download and build benchmark deps")
+    set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "dont build tests on benchmarks")
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "dont build tests on benchmarks")
+    set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "not needed for embedded project")
+    set(BENCHMARK_INSTALL_DOCS OFF CACHE BOOL "not needed for embedded project")
+    FetchContent_Declare(
+      benchmark
+      GIT_REPOSITORY https://github.com/google/benchmark/
+      GIT_TAG fba5dd147d34b793e9ae2554f34f36a0bf507c6e
+    )
+    FetchContent_MakeAvailable(benchmark)
+endblock()

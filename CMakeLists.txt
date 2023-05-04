@@ -40,5 +40,6 @@ add_subdirectory(thirdparty)
 add_subdirectory(src-lib)
 add_subdirectory(src-exe)
 add_subdirectory(tests)
+add_subdirectory(benchmark)
 
 install (TARGETS ChessEngine)
