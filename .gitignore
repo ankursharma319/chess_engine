@@ -79,6 +79,7 @@ _install/
 .vscode
 valgrind-out.txt
 callgrind.out.*
+massif.out.*
 gmon.out
 *.svg
 *.out

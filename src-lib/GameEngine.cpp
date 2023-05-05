@@ -172,7 +172,8 @@ std::unordered_set<ChessEngineLib::Square> king_destinations(
     std::unordered_set<Square> dests =
         short_range_piece_destinations(board, source, {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}});
     Piece const& piece = board.at(source).value();
-    bool spawn_position = piece.color == Color::White ? source == Square({4,0}) : source == Square({4,7});
+    [[maybe_unused]] bool spawn_position = piece.color == Color::White ?
+        source == Square({4,0}) : source == Square({4,7});
     if(castling_allowed(board, piece.color, ChessEngineLib::Side::KingSide)) {
         VLOG(9) << "adding kingside castle as a possible dest";
         assert(spawn_position);

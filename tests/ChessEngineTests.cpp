@@ -15,7 +15,10 @@ GTEST_API_ int main(int argc, char **argv) {
     FLAGS_v = 0; // applies to VLOG, higher is more logging
     google::InitGoogleLogging(argv[0]);
     testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    int to_return = RUN_ALL_TESTS();
+
+    google::ShutdownGoogleLogging();
+    return to_return;
 }
 
 using namespace ChessEngineLib;

@@ -5,10 +5,9 @@ pkgs.mkShell {
         pkgs.cmake
     ];
     buildInputs = if pkgs.stdenv.isDarwin then [] else [ pkgs.valgrind ] ++ [
-        pkgs.git
         pkgs.gdb
         pkgs.valgrind
-        pkgs.which
+        pkgs.massif-visualizer
         pkgs.python39Packages.gprof2dot
         pkgs.xdot
         pkgs.graphviz

@@ -50,6 +50,7 @@ int main(int argc, char** argv) {
     }
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();
+    google::ShutdownGoogleLogging();
     return 0;
 }
 
